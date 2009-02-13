@@ -26,6 +26,7 @@
 #include "OgreRoot.h"
 #include "OgreString.h"
 #include "OgreStringConverter.h"
+#include "OgreMesh.h"
 #include "OgreVector3.h"
 #include "OgreMeshSerializer.h"
 #include "OgreSkeletonSerializer.h"
@@ -70,16 +71,21 @@ END_EVENT_TABLE()
 MeshMixerFrame::MeshMixerFrame(wxWindow* parent, int id, const wxString& title, const wxPoint& pos, const wxSize& size, long style):
 wxFrame(parent, id, title, pos, size, wxDEFAULT_FRAME_STYLE)
 {
+    mMeshMaker = NULL;
+    mRoot = NULL;
+    mMeshNode = NULL;
+	mEntity = NULL;	
+
     createAuiManager();
     createMenuBar();
-    createOgrePane();
+	if (!createOgrePane()) {
+		throw std::exception();
+	}
     createOptionsPane();
     createInformationPane();
 
     mAuiManager->Update();
-    mMeshMaker = NULL;
-    mRoot = NULL;
-    mMeshNode = NULL;
+
 }
 
 
@@ -123,20 +129,20 @@ void MeshMixerFrame::createFileMenu()
     mFileMenu = new wxMenu();
 
 
-    wxMenuItem *menuItem = new wxMenuItem(mFileMenu, ID_FILE_MENU_OPEN, "&Open");
+    wxMenuItem *menuItem = new wxMenuItem(mFileMenu, ID_FILE_MENU_OPEN, wxT("&Open"));
     mFileMenu->Append(menuItem);
 
-    menuItem = new wxMenuItem(mFileMenu, ID_FILE_MENU_SAVE, "&Save");
+    menuItem = new wxMenuItem(mFileMenu, ID_FILE_MENU_SAVE, wxT("&Save"));
     //menuItem->SetBitmap(IconManager::getSingleton().getIcon(IconManager::SAVE));
     mFileMenu->Append(menuItem);
 
-    menuItem = new wxMenuItem(mFileMenu, ID_FILE_MENU_SAVE_AS, "Save &As...");
+    menuItem = new wxMenuItem(mFileMenu, ID_FILE_MENU_SAVE_AS, wxT("Save &As..."));
     //menuItem->SetBitmap(IconManager::getSingleton().getIcon(IconManager::SAVE_AS));
     mFileMenu->Append(menuItem);
 
     mFileMenu->AppendSeparator();
 
-    menuItem = new wxMenuItem(mFileMenu, ID_FILE_MENU_CLOSE, "&Close");
+    menuItem = new wxMenuItem(mFileMenu, ID_FILE_MENU_CLOSE, wxT("&Close"));
     //menuItem->SetBitmap(IconManager::getSingleton().getIcon(IconManager::CLOSE));
     mFileMenu->Append(menuItem);
 
@@ -152,14 +158,14 @@ void MeshMixerFrame::createViewMenu()
     mViewMenu = new wxMenu();
 
     wxMenuItem *menuItem = new wxMenuItem(mViewMenu, ID_VIEW_MENU_FREE_CAMERA,
-                                          "&Free Camera",
-                                          "Switch between free or orbital camera",
+                                          wxT("&Free Camera"),
+                                          wxT("Switch between free or orbital camera"),
                                           wxITEM_CHECK);
 
     mViewMenu->Append(menuItem);
 
-    menuItem = new wxMenuItem(mViewMenu, ID_VIEW_MENU_WIREFRAME, "&Wireframe",
-                              "Switch between Wireframe or solid",
+    menuItem = new wxMenuItem(mViewMenu, ID_VIEW_MENU_WIREFRAME, wxT("&Wireframe"),
+                              wxT("Switch between Wireframe or solid"),
                               wxITEM_CHECK);
     mViewMenu->Append(menuItem);
 
@@ -172,7 +178,7 @@ void MeshMixerFrame::createViewMenu()
 }
 
 
-void MeshMixerFrame::createOgrePane()
+bool MeshMixerFrame::createOgrePane()
 {
     mRoot = new Ogre::Root();
 
@@ -186,8 +192,8 @@ void MeshMixerFrame::createOgrePane()
     RenderSystemList *rl = mRoot->getAvailableRenderers();
     if (rl->empty())
     {
-        wxMessageBox("No render systems found", "Error");
-        return;
+        wxMessageBox(wxT("No render systems found"), wxT("Error"));
+        return false;
     }
     for(RenderSystemList::iterator it = rl->begin(); it != rl->end(); ++it)
     {
@@ -213,7 +219,9 @@ void MeshMixerFrame::createOgrePane()
     }
 
     mOgreControl = new wxOgre(this);
-
+#ifndef __unix__
+	createOgreRenderWindow();
+#endif
     ConfigFile cf;
     cf.load("resources.cfg");
 
@@ -239,8 +247,9 @@ void MeshMixerFrame::createOgrePane()
 
     wxString caption;
     String rs = mRoot->getRenderSystem()->getName();
-    if(rs == "OpenGL Rendering Subsystem") caption = "OGRE - OpenGL";
-    else caption = "OGRE - DirectX";
+    if(rs == "OpenGL Rendering Subsystem") 
+		caption = wxT("OGRE - OpenGL");
+    else caption = wxT("OGRE - DirectX");
 
     wxAuiPaneInfo info;
     info.Caption(caption);
@@ -251,14 +260,14 @@ void MeshMixerFrame::createOgrePane()
     info.Right();
 
     mAuiManager->AddPane(mOgreControl, info);
+	return true;
 }
 
 void MeshMixerFrame::createOgreRenderWindow()
 {
     mOgreControl->createOgreRenderWindow();
     mOgreControl->toggleTimerRendering();
-    mMeshMaker = new MeshMaker( wxOgre::getSingleton().getSceneManager() );
-
+    mMeshMaker = new MeshMaker( wxOgre::getSingleton().getSceneManager() );       
 }
 
 void MeshMixerFrame::updateOgre()
@@ -271,11 +280,11 @@ void MeshMixerFrame::createInformationPane()
     mInformationNotebook = new wxAuiNotebook(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_NB_TOP | wxAUI_NB_TAB_SPLIT | wxAUI_NB_TAB_MOVE | wxAUI_NB_SCROLL_BUTTONS | wxNO_BORDER);
 
     mLogPanel = new LogPanel(mInformationNotebook);
-    mInformationNotebook->AddPage(mLogPanel, "Ogre Log");
+    mInformationNotebook->AddPage(mLogPanel, wxT("Ogre Log"));
     mLogPanel->attachLog(Ogre::LogManager::getSingleton().getDefaultLog());
 
     mImportLogPanel = new LogPanel(mInformationNotebook);
-    mInformationNotebook->AddPage(mImportLogPanel, "Import Log");
+    mInformationNotebook->AddPage(mImportLogPanel, wxT("Import Log"));
 
     // TO DO : need to add assimp log
 
@@ -291,12 +300,12 @@ void MeshMixerFrame::createInformationPane()
 
 void MeshMixerFrame::createOptionsPane()
 {
-    mOptionsNotebook = new wxAuiNotebook(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_NB_TOP | wxAUI_NB_TAB_SPLIT | wxAUI_NB_TAB_MOVE | wxAUI_NB_SCROLL_BUTTONS | wxNO_BORDER );
+    mOptionsNotebook = new wxAuiNotebook(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_NB_TOP | wxAUI_NB_TAB_SPLIT | wxAUI_NB_TAB_MOVE | wxAUI_NB_SCROLL_BUTTONS | wxNO_BORDER ); 
 
     mOptionsPanel = new OptionsPanel(mOptionsNotebook);
-    mOptionsNotebook->AddPage(mOptionsPanel, "Post Process Options");
+    mOptionsNotebook->AddPage(mOptionsPanel, wxT("Post Process Options"));
 
-    wxAuiPaneInfo info;
+    wxAuiPaneInfo info;         
     info.Caption(wxT("Options"));
     info.MaximizeButton(true);
     info.BestSize(512,128);
@@ -309,11 +318,8 @@ void MeshMixerFrame::createOptionsPane()
 void MeshMixerFrame::OnFileNew(wxCommandEvent& event)
 {
     mOgreControl->resetCamera();
-    if (mMeshMaker->getManualMesh() != NULL)
-    {
-        mMeshNode->detachAllObjects();
-        mMeshMaker->destroy();
-    }
+	mMeshNode->detachAllObjects();
+	mMeshMaker->destroy();
     return;
 }
 
@@ -322,14 +328,11 @@ void MeshMixerFrame::OnFileOpen(wxCommandEvent& event)
     wxFileDialog fd(this, wxT("Open An Asset"));
     if (fd.ShowModal() == wxID_OK)
     {
-        if (mMeshMaker->getManualMesh() != NULL)
-        {
-            mMeshNode->detachAllObjects();
-            mMeshMaker->destroy();
-        }
+		//mMeshNode->detachAllObjects();
+		//7mMeshMaker->destroy();
 
         Assimp::Importer importer;
-        const aiScene* scene = importer.ReadFile( std::string(fd.GetPath().c_str()),  mOptionsPanel->getOptions());
+        const aiScene* scene = importer.ReadFile( std::string(fd.GetPath().mb_str(wxConvUTF8)),  mOptionsPanel->getOptions());
 
         if (!scene)
         {
@@ -342,36 +345,36 @@ void MeshMixerFrame::OnFileOpen(wxCommandEvent& event)
         mImportLogPanel->messageLogged(( boost::format("Meshes %d ") %  scene->mNumMeshes).str() );
         mImportLogPanel->messageLogged(( boost::format("Textures %d ") % scene->mNumTextures).str() );
 
-        Ogre::SceneManager *sceneMgr = wxOgre::getSingleton().getSceneManager();
-
         mOgreControl->resetCamera();
         if (mMeshNode == NULL)
         {
+            Ogre::SceneManager *sceneMgr = wxOgre::getSingleton().getSceneManager();    
             Ogre::SceneNode *rootNode = sceneMgr->getRootSceneNode();
             mMeshNode = rootNode->createChildSceneNode();
         }
 
         for(std::size_t i = 0; i < scene->mNumMeshes; i++)
         {
-            mMeshMaker->create( scene->mMeshes[i], scene->mMaterials );
+           mMeshMaker->create( scene->mMeshes[i], scene->mMaterials );
         }
-        mMeshMaker->convertToMesh("TeshMesh");
-        Ogre::Entity *entity = sceneMgr->createEntity("TestMeshEntity", "TestMesh");
-        //mMeshNode->attachObject(entity);
+       Ogre::MeshPtr mesh = mMeshMaker->getMesh();
+	   mEntity = wxOgre::getSingleton().getSceneManager()->createEntity("Mesh", mesh->getName());	   
+       mMeshNode->attachObject(mEntity);            
     };
-
+    
 }
 
 void MeshMixerFrame::OnFileSave(wxCommandEvent& event)
 {
+/*    
     wxFileDialog *fdlg = new wxFileDialog(this, wxT("Save a mesh"), wxEmptyString, wxEmptyString,
                                           wxT("Ogre Mesh File|*.mesh|Any File|*.*"), wxOVERWRITE_PROMPT | wxFD_SAVE);
 
     if (fdlg->ShowModal() == wxID_OK)
     {
-        Ogre::String fname(fdlg->GetPath().c_str());
+        Ogre::String fname(std::string(fdlg->GetPath().mb_str(wxConvUTF8)));
         wxFileName fn(fdlg->GetPath());
-        Ogre::MeshPtr mesh = mMeshMaker->convertToMesh(Ogre::String(fn.GetName().c_str()));
+        Ogre::MeshPtr mesh = mMeshMaker->convertToMesh(Ogre::String(fn.GetName().mb_str(wxConvUTF8)));
 
         if (!mesh.isNull())
         {
@@ -387,10 +390,12 @@ void MeshMixerFrame::OnFileSave(wxCommandEvent& event)
                 ms.exportMaterial(materialPtr, matName + ".material", true);
             }
             Ogre::MeshSerializer *meshSerializer = new Ogre::MeshSerializer();
-            meshSerializer->exportMesh(mesh.getPointer(), Ogre::String(fn.GetFullPath().c_str()), Ogre::Serializer::ENDIAN_NATIVE);
+            meshSerializer->exportMesh(mesh.getPointer(), Ogre::String(fn.GetFullPath().mb_str(wxConvUTF8)),
+                                       Ogre::Serializer::ENDIAN_NATIVE);
         }
 
     }
+*/
 }
 
 void MeshMixerFrame::OnFileSaveAs(wxCommandEvent& event)
@@ -399,7 +404,7 @@ void MeshMixerFrame::OnFileSaveAs(wxCommandEvent& event)
 
 void MeshMixerFrame::OnFileClose(wxCommandEvent& event)
 {
-    this->Close();
+   this->Close();
 }
 
 void MeshMixerFrame::OnFileExit(wxCommandEvent& event)

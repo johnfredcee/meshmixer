@@ -47,7 +47,7 @@ class MeshMixerFrame: public wxFrame
         void createViewMenu();        
         void createMenuBar();        
         void createAuiManager(void);
-        void createOgrePane(void);
+        bool createOgrePane(void);
         void createInformationPane(void);
         void createOptionsPane(void);
         void createOgreRenderWindow(void);

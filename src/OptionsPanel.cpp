@@ -37,29 +37,29 @@ OptionsPanel::OptionsPanel(wxWindow* parent, wxWindowID id /* = wxID_ANY */, con
   : wxPanel(parent, id, pos, size, style, name),
     mOptions( aiProcess_Triangulate | aiProcess_GenNormals )
 {
-    mSizer = new wxFlexGridSizer( 20, 0, 0, 5 );
+    mSizer = new wxFlexGridSizer( 19, 0, 0, 5 );
     mSizer->AddGrowableCol(0);
 
-    mCheckBox0 = new wxCheckBox( this, CALC_TANGENT_SPACE_ID, "Calculate Tangent Space"  );
-    mCheckBox1 = new wxCheckBox( this, JOIN_IDENTICAL_VERTICES_ID,  "Join Identical Vertices" );
-    mCheckBox2 = new wxCheckBox( this, CONVERT_TO_LH_ID, "Convert to Left Handed");
-    mCheckBox3 = new wxCheckBox( this, TRIANGULATE_ID, "Triangulate");
-    mCheckBox4 = new wxCheckBox( this, REMOVE_COMPONENT_ID, "Remove Components");
-    mCheckBox5 = new wxCheckBox( this, GENERATE_NORMALS_ID, "Generate Normals");
-    mCheckBox6 = new wxCheckBox( this, GENERATE_SMOOTH_NORMALS_ID, "Generate Smooth Normals");
-    mCheckBox7 = new wxCheckBox( this, SPLIT_LARGE_MESHES_ID, "Split Large Meshes");
-    mCheckBox8 = new wxCheckBox( this, PRETRANSFORM_VERTICES_ID, "Pretransform Vertices");
-    mCheckBox9 = new wxCheckBox( this, LIMIT_BONE_WEIGHTS_ID, "Limit Bone Weights");
-    mCheckBox10 = new wxCheckBox( this, VALIDATE_DATA_STRUCTURE_ID, "Validate Data Structure");
-    mCheckBox11 = new wxCheckBox( this, IMPROVE_CACHE_LOCALITY_ID, "Improve Cache Locality");
-    mCheckBox12 = new wxCheckBox( this, REMOVE_REDUNDANT_MATERIALS_ID, "Remove Reduntant Materials");
-    mCheckBox13 = new wxCheckBox( this, FIX_INFACING_NORMALS_ID, "Fix InFacing normals");
-    mCheckBox14 = new wxCheckBox( this, OPTIMIZE_GRAPH_ID, "Optimize Graph");
-    mCheckBox15 = new wxCheckBox( this, SORT_BY_PRIM_TYPE_ID, "Sort by primitive Type");
-    mCheckBox16 = new wxCheckBox( this, FIND_DEGENERATES_ID, "Find Degenerates");
-    mCheckBox17 = new wxCheckBox( this, FIND_INVALID_DATA_ID, "Find Invalid Data");
-    mCheckBox18 = new wxCheckBox( this, GENERATE_UV_COORDS, "Generate UV Coords");
-    mCheckBox19 = new wxCheckBox( this, TRANSFORM_UV_COORDS, "Transform UV Coords");
+    mCheckBox0 = new wxCheckBox( this, CALC_TANGENT_SPACE_ID, wxT("Calculate Tangent Space"  ));
+	mCheckBox1 = new wxCheckBox( this, JOIN_IDENTICAL_VERTICES_ID,  wxT("Join Identical Vertices" ));
+    mCheckBox2 = new wxCheckBox( this, CONVERT_TO_LH_ID, wxT("Convert to Left Handed"));
+    mCheckBox3 = new wxCheckBox( this, TRIANGULATE_ID, wxT("Triangulate"));
+    mCheckBox4 = new wxCheckBox( this, REMOVE_COMPONENT_ID, wxT("Remove Components"));
+    mCheckBox5 = new wxCheckBox( this, GENERATE_NORMALS_ID, wxT("Generate Normals"));
+    mCheckBox6 = new wxCheckBox( this, GENERATE_SMOOTH_NORMALS_ID, wxT("Generate Smooth Normals"));
+    mCheckBox7 = new wxCheckBox( this, SPLIT_LARGE_MESHES_ID, wxT("Split Large Meshes"));
+    mCheckBox8 = new wxCheckBox( this, PRETRANSFORM_VERTICES_ID, wxT("Pretransform Vertices"));
+    mCheckBox9 = new wxCheckBox( this, LIMIT_BONE_WEIGHTS_ID, wxT("Limit Bone Weights"));
+    mCheckBox10 = new wxCheckBox( this, VALIDATE_DATA_STRUCTURE_ID, wxT("Validate Data Structure"));
+    mCheckBox11 = new wxCheckBox( this, IMPROVE_CACHE_LOCALITY_ID, wxT("Improve Cache Locality"));
+    mCheckBox12 = new wxCheckBox( this, REMOVE_REDUNDANT_MATERIALS_ID, wxT("Remove Reduntant Materials"));
+    mCheckBox13 = new wxCheckBox( this, FIX_INFACING_NORMALS_ID, wxT("Fix InFacing normals"));
+//    mCheckBox14 = new wxCheckBox( this, OPTIMIZE_GRAPH_ID, wxT("Optimize Graph"));
+    mCheckBox15 = new wxCheckBox( this, SORT_BY_PRIM_TYPE_ID, wxT("Sort by primitive Type"));
+    mCheckBox16 = new wxCheckBox( this, FIND_DEGENERATES_ID, wxT("Find Degenerates"));
+    mCheckBox17 = new wxCheckBox( this, FIND_INVALID_DATA_ID, wxT("Find Invalid Data"));
+    mCheckBox18 = new wxCheckBox( this, GENERATE_UV_COORDS, wxT("Generate UV Coords"));
+    mCheckBox19 = new wxCheckBox( this, TRANSFORM_UV_COORDS, wxT("Transform UV Coords"));
 
     mSizer->Add(mCheckBox0);
     mSizer->Add(mCheckBox1);
@@ -75,7 +75,7 @@ OptionsPanel::OptionsPanel(wxWindow* parent, wxWindowID id /* = wxID_ANY */, con
     mSizer->Add(mCheckBox11);
     mSizer->Add(mCheckBox12);
     mSizer->Add(mCheckBox13);
-    mSizer->Add(mCheckBox14);
+//    mSizer->Add(mCheckBox14);
     mSizer->Add(mCheckBox15);
     mSizer->Add(mCheckBox16);
     mSizer->Add(mCheckBox17);
@@ -117,7 +117,7 @@ bool OptionsPanel::TransferDataFromWindow()
     mOptions |= mCheckBox11->GetValue() ? aiProcess_ImproveCacheLocality : 0;
     mOptions |= mCheckBox12->GetValue() ? aiProcess_RemoveRedundantMaterials : 0;
     mOptions |= mCheckBox13->GetValue() ? aiProcess_FixInfacingNormals : 0;
-    mOptions |= mCheckBox14->GetValue() ? aiProcess_OptimizeGraph : 0;
+//    mOptions |= mCheckBox14->GetValue() ? aiProcess_OptimizeGraph : 0;
     mOptions |= mCheckBox15->GetValue() ? aiProcess_SortByPType : 0;
     mOptions |= mCheckBox16->GetValue() ? aiProcess_FindDegenerates : 0;
     mOptions |= mCheckBox17->GetValue() ? aiProcess_FindInvalidData : 0;
@@ -144,7 +144,7 @@ bool OptionsPanel::TransferDataToWindow()
     mCheckBox11->SetValue( ( mOptions &  aiProcess_ImproveCacheLocality       ) != 0);
     mCheckBox12->SetValue( ( mOptions &  aiProcess_RemoveRedundantMaterials     ) != 0);
     mCheckBox13->SetValue( ( mOptions &  aiProcess_FixInfacingNormals         ) != 0);
-    mCheckBox14->SetValue( ( mOptions &  aiProcess_OptimizeGraph              ) != 0);
+//    mCheckBox14->SetValue( ( mOptions &  aiProcess_OptimizeGraph              ) != 0);
     mCheckBox15->SetValue( ( mOptions &  aiProcess_SortByPType                ) != 0);
     mCheckBox16->SetValue( ( mOptions &  aiProcess_FindDegenerates           ) != 0);
     mCheckBox17->SetValue( ( mOptions &  aiProcess_FindInvalidData           ) != 0);

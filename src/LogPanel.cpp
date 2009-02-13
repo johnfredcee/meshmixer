@@ -2,6 +2,7 @@
 
 #include <wx/sizer.h>
 #include <wx/textctrl.h>
+#include <wx/strconv.h>
 
 #include "OgreString.h"
 #include "LogToTextRedirector.h"
@@ -37,7 +38,9 @@ void LogPanel::messageLogged(const Ogre::String& message, Ogre::LogMessageLevel 
 {
 	if(lml == Ogre::LML_CRITICAL || lml == Ogre::LML_NORMAL)
 	{
-		mTextControl->AppendText(wxT(message.c_str()));
+//		wxMBConvUTF8 converter;
+		wxString msg(message.c_str(), wxConvUTF8);
+		mTextControl->AppendText(msg);
 		mTextControl->AppendText(wxT("\n"));
 	}
 }

@@ -18,15 +18,15 @@ class MeshMaker
         ~MeshMaker();
         bool create(const aiMesh *sc, aiMaterial **mat);
         void destroy();
-        Ogre::ManualObject* getManualMesh();
         Ogre::MeshPtr convertToMesh(const Ogre::String& name);
-
+        Ogre::MeshPtr getMesh();
+        void setName(const std::string& name)	{ mName = name;	}
     private:
+        Ogre::MaterialPtr createMaterial(aiMaterial* mat);        
         Ogre::SceneManager *mSceneMgr;
-        Ogre::ManualObject* mManual;
         Ogre::MeshPtr mMesh;
         Ogre::String mName;
-        
+        Ogre::AxisAlignedBox mAAB;        
         static unsigned mCount;
 };
 

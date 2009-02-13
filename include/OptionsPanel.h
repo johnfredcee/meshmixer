@@ -14,7 +14,7 @@ class OptionsPanel : public wxPanel
 public:
     OptionsPanel(wxWindow* parent, wxWindowID id = wxID_ANY,
                  const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize,
-                 long style = wxTAB_TRAVERSAL, const wxString& name = "OptionsPanel");
+                 long style = wxTAB_TRAVERSAL, const wxString& name = wxT("OptionsPanel"));
     virtual ~OptionsPanel();
     virtual bool TransferDataFromWindow();
     virtual bool TransferDataToWindow();
