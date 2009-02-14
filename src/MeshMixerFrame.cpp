@@ -251,15 +251,8 @@ bool MeshMixerFrame::createOgrePane()
 		caption = wxT("OGRE - OpenGL");
     else caption = wxT("OGRE - DirectX");
 
-    wxAuiPaneInfo info;
-    info.Caption(caption);
-    info.MaximizeButton(true);
-    info.MinimizeButton(true);
-    info.Floatable(true);
-    info.BestSize(512, 512);
-    info.Right();
 
-    mAuiManager->AddPane(mOgreControl, info);
+    mAuiManager->AddPane(mOgreControl, wxCENTER, wxT("Ogre Pane"));
 	return true;
 }
 

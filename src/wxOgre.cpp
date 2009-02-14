@@ -60,10 +60,16 @@ void wxOgre::createOgreRenderWindow()
     
 	// prevents flickering
 	gtk_widget_set_double_buffered(privHandle, FALSE);
+
+    // this doesn't work w. Ogre 1.6.1 maybe this will fix it?
+    //gtk_widget_realize(privHandle);
+    
 	// grab the window object
 	GdkWindow* gdkWin = GTK_PIZZA(privHandle)->bin_window;
 	Display* display = GDK_WINDOW_XDISPLAY(gdkWin);
 	Window wid = GDK_WINDOW_XWINDOW(gdkWin);
+
+    //XSync(display,wid);
 
 	std::stringstream str;
 
