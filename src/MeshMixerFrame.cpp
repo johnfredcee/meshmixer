@@ -71,11 +71,12 @@ END_EVENT_TABLE()
 MeshMixerFrame::MeshMixerFrame(wxWindow* parent, int id, const wxString& title, const wxPoint& pos, const wxSize& size, long style):
 wxFrame(parent, id, title, pos, size, wxDEFAULT_FRAME_STYLE)
 {
-    mMeshMaker = NULL;
     mRoot = NULL;
     mMeshNode = NULL;
 	mEntity = NULL;	
 
+    mMeshMaker = new MeshMaker();
+    
     createAuiManager();
     createMenuBar();
 	if (!createOgrePane()) {
@@ -83,9 +84,7 @@ wxFrame(parent, id, title, pos, size, wxDEFAULT_FRAME_STYLE)
 	}
     createOptionsPane();
     createInformationPane();
-
     mAuiManager->Update();
-
 }
 
 
@@ -120,7 +119,7 @@ void MeshMixerFrame::createMenuBar()
 //  createToolsMenu();
 //  createWindowMenu();
 //  createHelpMenu();
-
+    
     SetMenuBar(mMenuBar);
 }
 
@@ -253,6 +252,8 @@ bool MeshMixerFrame::createOgrePane()
 
 
     mAuiManager->AddPane(mOgreControl, wxCENTER, wxT("Ogre Pane"));
+
+    
 	return true;
 }
 
@@ -260,7 +261,6 @@ void MeshMixerFrame::createOgreRenderWindow()
 {
     mOgreControl->createOgreRenderWindow();
     mOgreControl->toggleTimerRendering();
-    mMeshMaker = new MeshMaker( wxOgre::getSingleton().getSceneManager() );       
 }
 
 void MeshMixerFrame::updateOgre()
@@ -270,17 +270,21 @@ void MeshMixerFrame::updateOgre()
 
 void MeshMixerFrame::createInformationPane()
 {
+    Ogre::LogManager* logMgr = Ogre::LogManager::getSingletonPtr();
+    
     mInformationNotebook = new wxAuiNotebook(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_NB_TOP | wxAUI_NB_TAB_SPLIT | wxAUI_NB_TAB_MOVE | wxAUI_NB_SCROLL_BUTTONS | wxNO_BORDER);
 
     mLogPanel = new LogPanel(mInformationNotebook);
     mInformationNotebook->AddPage(mLogPanel, wxT("Ogre Log"));
-    mLogPanel->attachLog(Ogre::LogManager::getSingleton().getDefaultLog());
+    mLogPanel->attachLog(logMgr->getDefaultLog());
 
     mImportLogPanel = new LogPanel(mInformationNotebook);
     mInformationNotebook->AddPage(mImportLogPanel, wxT("Import Log"));
 
-    // TO DO : need to add assimp log
-
+    Ogre::Log *importLog = logMgr->createLog("Import.log");
+    mImportLogPanel->attachLog(importLog);
+    mMeshMaker->setLog(importLog);
+    
     wxAuiPaneInfo info;
     info.Caption(wxT("Information"));
     info.MaximizeButton(true);
@@ -321,38 +325,42 @@ void MeshMixerFrame::OnFileOpen(wxCommandEvent& event)
     wxFileDialog fd(this, wxT("Open An Asset"));
     if (fd.ShowModal() == wxID_OK)
     {
-		//mMeshNode->detachAllObjects();
-		//7mMeshMaker->destroy();
+        std::string meshPath(fd.GetPath().mb_str(wxConvUTF8));
+        wxFileName fn(fd.GetPath());
+        std::string meshName(fn.GetName().mb_str(wxConvUTF8));
 
         Assimp::Importer importer;
-        const aiScene* scene = importer.ReadFile( std::string(fd.GetPath().mb_str(wxConvUTF8)),  mOptionsPanel->getOptions());
+        const aiScene* scene = importer.ReadFile( meshPath,  mOptionsPanel->getOptions());
 
         if (!scene)
         {
             mImportLogPanel->messageLogged( importer.GetErrorString().c_str() );
-        }
+        } else {
 
-        mImportLogPanel->messageLogged(( boost::format("Read file %s ") % fd.GetPath().c_str() ).str() );
-        mImportLogPanel->messageLogged(( boost::format("Animations %d ") % scene->mNumAnimations).str() );
-        mImportLogPanel->messageLogged(( boost::format("Materials %d ") % scene->mNumMaterials).str() );
-        mImportLogPanel->messageLogged(( boost::format("Meshes %d ") %  scene->mNumMeshes).str() );
-        mImportLogPanel->messageLogged(( boost::format("Textures %d ") % scene->mNumTextures).str() );
-
-        mOgreControl->resetCamera();
-        if (mMeshNode == NULL)
-        {
-            Ogre::SceneManager *sceneMgr = wxOgre::getSingleton().getSceneManager();    
-            Ogre::SceneNode *rootNode = sceneMgr->getRootSceneNode();
-            mMeshNode = rootNode->createChildSceneNode();
+            mImportLogPanel->messageLogged(( boost::format("Read file %s ") % fd.GetPath().c_str() ).str() );
+            mImportLogPanel->messageLogged(( boost::format("Animations %d ") % scene->mNumAnimations).str() );
+            mImportLogPanel->messageLogged(( boost::format("Materials %d ") % scene->mNumMaterials).str() );
+            mImportLogPanel->messageLogged(( boost::format("Meshes %d ") %  scene->mNumMeshes).str() );
+            mImportLogPanel->messageLogged(( boost::format("Textures %d ") % scene->mNumTextures).str() );
+            
+            mOgreControl->resetCamera();
+            if (mMeshNode == NULL)
+            {
+                Ogre::SceneManager *sceneMgr = wxOgre::getSingleton().getSceneManager();    
+                Ogre::SceneNode *rootNode = sceneMgr->getRootSceneNode();
+                mMeshNode = rootNode->createChildSceneNode();
+            }
+            
+            mMeshMaker->setName(meshName);
+            mMeshMaker->createMesh();
+            for(std::size_t i = 0; i < scene->mNumMeshes; i++)
+            {
+                mMeshMaker->createSubMesh( i, scene->mMeshes[i], scene->mMaterials );
+            }
+            Ogre::MeshPtr mesh = mMeshMaker->getMesh();
+            mEntity = wxOgre::getSingleton().getSceneManager()->createEntity("Mesh", mesh->getName());	   
+            mMeshNode->attachObject(mEntity);
         }
-
-        for(std::size_t i = 0; i < scene->mNumMeshes; i++)
-        {
-           mMeshMaker->create( scene->mMeshes[i], scene->mMaterials );
-        }
-       Ogre::MeshPtr mesh = mMeshMaker->getMesh();
-	   mEntity = wxOgre::getSingleton().getSceneManager()->createEntity("Mesh", mesh->getName());	   
-       mMeshNode->attachObject(mEntity);            
     };
     
 }

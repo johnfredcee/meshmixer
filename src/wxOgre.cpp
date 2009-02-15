@@ -283,13 +283,13 @@ void wxOgre::update()
 {
  // ****************************************************
    // TODO: REMOVE THESE LINES! These are merely for test!
-    static float redTone = 0;
-    redTone += 0.01;
-    if(redTone>1.0)
-        redTone=0;
+   // static float redTone = 0;
+   // redTone += 0.01;
+   // if(redTone>1.0)
+   //     redTone=0;
    // ****************************************************
    if (mViewPort) {
-       mViewPort->setBackgroundColour(Ogre::ColourValue(redTone, 0.0f, 0.0f, 1.0f));     
+       mViewPort->setBackgroundColour(Ogre::ColourValue(0.2, 0.2f, 0.2f, 1.0f));     
        Ogre::Root::getSingletonPtr()->renderOneFrame();
    }
 }

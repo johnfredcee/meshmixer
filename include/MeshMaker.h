@@ -8,21 +8,24 @@ struct aiMaterial;
 namespace Ogre {
     class ManualObject;
     class SceneManager;
+    class Log;
 }
 
 class MeshMaker
 {
 
     public:
-        MeshMaker(Ogre::SceneManager* sceneMgr);
+        MeshMaker();
         ~MeshMaker();
-        bool create(const aiMesh *sc, aiMaterial **mat);
+        bool createMesh();
+        bool createSubMesh(int index, const aiMesh *sc, aiMaterial **mat);
         void destroy();
-        Ogre::MeshPtr convertToMesh(const Ogre::String& name);
         Ogre::MeshPtr getMesh();
         void setName(const std::string& name)	{ mName = name;	}
+        void setLog(Ogre::Log *olog) { mLog = olog;  }
     private:
-        Ogre::MaterialPtr createMaterial(aiMaterial* mat);        
+        Ogre::Log *mLog;
+        Ogre::MaterialPtr createMaterial(int index, aiMaterial* mat);        
         Ogre::SceneManager *mSceneMgr;
         Ogre::MeshPtr mMesh;
         Ogre::String mName;
