@@ -2,6 +2,7 @@
 
 #include "MeshMixerFrame.h"
 
+#include <wx/filedlg.h>
 #include <wx/bitmap.h>
 #include <wx/notebook.h>
 #include <wx/treectrl.h>
@@ -10,6 +11,7 @@
 #include <wx/aui/framemanager.h>
 #include <wx/log.h>
 
+#include <wx/filename.h>
 #include <assimp.hpp>
 #include <aiScene.h>
 #include <aiMesh.h>
@@ -20,11 +22,17 @@
 #include "OgreConfigFile.h"
 #include "OgreMaterial.h"
 #include "OgreMaterialManager.h"
+
+#include "OgreMeshManager.h"
+
 #include "OgreRoot.h"
 #include "OgreString.h"
 #include "OgreStringConverter.h"
 #include "OgreMesh.h"
 #include "OgreVector3.h"
+#include "OgreMeshSerializer.h"
+#include "OgreSkeletonSerializer.h"
+
 
 #include "boost/format.hpp"
 
@@ -60,24 +68,24 @@ BEGIN_EVENT_TABLE(MeshMixerFrame, wxFrame)
     EVT_MENU (ID_FILE_MENU_CLOSE,        MeshMixerFrame::OnFileClose)
     EVT_MENU (ID_FILE_MENU_EXIT,         MeshMixerFrame::OnFileExit)
     EVT_MENU (ID_VIEW_MENU_FREE_CAMERA,  MeshMixerFrame::OnViewFreeCamera)
+    EVT_MENU (ID_VIEW_MENU_WIREFRAME,    MeshMixerFrame::OnViewWireframe)
 END_EVENT_TABLE()
 
 MeshMixerFrame::MeshMixerFrame(wxWindow* parent, int id, const wxString& title, const wxPoint& pos, const wxSize& size, long style):
 wxFrame(parent, id, title, pos, size, wxDEFAULT_FRAME_STYLE)
 {
-    mMeshMaker = NULL;
     mRoot = NULL;
     mMeshNode = NULL;
 	mEntity = NULL;	
-
+    mMeshMaker = new MeshMaker();
+    
     createAuiManager();
     createMenuBar();
 	if (!createOgrePane()) {
-		throw std::exception("No renderer");
+		throw std::exception();
 	}
     createOptionsPane();
     createInformationPane();
-
     mAuiManager->Update();
 
 }
@@ -114,7 +122,6 @@ void MeshMixerFrame::createMenuBar()
 //  createToolsMenu();
 //  createWindowMenu();
 //  createHelpMenu();
-
     SetMenuBar(mMenuBar);
 }
 
@@ -151,16 +158,24 @@ void MeshMixerFrame::createViewMenu()
 {
     mViewMenu = new wxMenu();
 
-    wxMenuItem *menuItem = new wxMenuItem(mViewMenu, ID_VIEW_MENU_FREE_CAMERA, wxT("&Free Camera"));
+    wxMenuItem *menuItem = new wxMenuItem(mViewMenu, ID_VIEW_MENU_FREE_CAMERA,
+                                          wxT("&Free Camera"),
+                                          wxT("Switch between free or orbital camera"),
+                                          wxITEM_CHECK);
+
     mViewMenu->Append(menuItem);
 
-    menuItem = new wxMenuItem(mViewMenu, ID_VIEW_MENU_WIREFRAME, wxT("&Wireframe"));
+    menuItem = new wxMenuItem(mViewMenu, ID_VIEW_MENU_WIREFRAME, wxT("&Wireframe"),
+                              wxT("Switch between Wireframe or solid"),
+                              wxITEM_CHECK);
     mViewMenu->Append(menuItem);
 
     mViewMenu->UpdateUI();
-    
+
     mMenuBar->Append(mViewMenu, wxT("&View"));
-  
+
+    mViewMenu->Check(ID_VIEW_MENU_FREE_CAMERA, true);
+
 }
 
 
@@ -227,6 +242,8 @@ bool MeshMixerFrame::createOgrePane()
         }
     }
 
+    Ogre::ResourceGroupManager::getSingleton().createResourceGroup("Converted");
+    Ogre::ResourceGroupManager::getSingleton().addResourceLocation( "../../../converted" , "FileSystem" , "Converted");
     Ogre::ResourceGroupManager::getSingleton().initialiseAllResourceGroups();
 
     wxString caption;
@@ -235,15 +252,8 @@ bool MeshMixerFrame::createOgrePane()
 		caption = wxT("OGRE - OpenGL");
     else caption = wxT("OGRE - DirectX");
 
-    wxAuiPaneInfo info;
-    info.Caption(caption);
-    info.MaximizeButton(true);
-    info.MinimizeButton(true);
-    info.Floatable(true);
-    info.BestSize(512, 512);
-    info.Right();
+    mAuiManager->AddPane(mOgreControl, wxCENTER, wxT("Ogre Pane"));
 
-    mAuiManager->AddPane(mOgreControl, info);
 	return true;
 }
 
@@ -251,7 +261,7 @@ void MeshMixerFrame::createOgreRenderWindow()
 {
     mOgreControl->createOgreRenderWindow();
     mOgreControl->toggleTimerRendering();
-    mMeshMaker = new MeshMaker( wxOgre::getSingleton().getSceneManager() );       
+
 }
 
 void MeshMixerFrame::updateOgre()
@@ -261,17 +271,24 @@ void MeshMixerFrame::updateOgre()
 
 void MeshMixerFrame::createInformationPane()
 {
+
+    Ogre::LogManager* logMgr = Ogre::LogManager::getSingletonPtr();
+    
     mInformationNotebook = new wxAuiNotebook(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_NB_TOP | wxAUI_NB_TAB_SPLIT | wxAUI_NB_TAB_MOVE | wxAUI_NB_SCROLL_BUTTONS | wxNO_BORDER);
 
     mLogPanel = new LogPanel(mInformationNotebook);
     mInformationNotebook->AddPage(mLogPanel, wxT("Ogre Log"));
-    mLogPanel->attachLog(Ogre::LogManager::getSingleton().getDefaultLog());
+
+    mLogPanel->attachLog(logMgr->getDefaultLog());
 
     mImportLogPanel = new LogPanel(mInformationNotebook);
     mInformationNotebook->AddPage(mImportLogPanel, wxT("Import Log"));
 
-    // TO DO : need to add assimp log
 
+    Ogre::Log *importLog = logMgr->createLog("Import.log");
+    mImportLogPanel->attachLog(importLog);
+    mMeshMaker->setLog(importLog);
+    
     wxAuiPaneInfo info;
     info.Caption(wxT("Information"));
     info.MaximizeButton(true);
@@ -312,44 +329,80 @@ void MeshMixerFrame::OnFileOpen(wxCommandEvent& event)
     wxFileDialog fd(this, wxT("Open An Asset"));
     if (fd.ShowModal() == wxID_OK)
     {
-		//mMeshNode->detachAllObjects();
-		//7mMeshMaker->destroy();
+
+        std::string meshPath(fd.GetPath().mb_str(wxConvUTF8));
+        wxFileName fn(fd.GetPath());
+        std::string meshName(fn.GetName().mb_str(wxConvUTF8));
 
         Assimp::Importer importer;
-        const aiScene* scene = importer.ReadFile( std::string(fd.GetPath().mb_str(wxConvUTF8)),  mOptionsPanel->getOptions());
+        const aiScene* scene = importer.ReadFile( meshPath,  mOptionsPanel->getOptions());
 
         if (!scene)
         {
             mImportLogPanel->messageLogged( importer.GetErrorString().c_str() );
+
+        } else {
+
+            mImportLogPanel->messageLogged(( boost::format("Read file %s ") % fd.GetPath().c_str() ).str() );
+            mImportLogPanel->messageLogged(( boost::format("Animations %d ") % scene->mNumAnimations).str() );
+            mImportLogPanel->messageLogged(( boost::format("Materials %d ") % scene->mNumMaterials).str() );
+            mImportLogPanel->messageLogged(( boost::format("Meshes %d ") %  scene->mNumMeshes).str() );
+            mImportLogPanel->messageLogged(( boost::format("Textures %d ") % scene->mNumTextures).str() );
+          
+            if (mMeshNode == NULL)
+            {
+                Ogre::SceneManager *sceneMgr = wxOgre::getSingleton().getSceneManager();    
+                Ogre::SceneNode *rootNode = sceneMgr->getRootSceneNode();
+                mMeshNode = rootNode->createChildSceneNode();
+			}  else {
+				mOgreControl->resetCamera();
+			}
+            
+            mMeshMaker->setName(meshName);
+            mMeshMaker->createMesh();
+            for(int i = 0; i < scene->mNumMeshes; i++)
+            {
+                mMeshMaker->createSubMesh( i, scene->mMeshes[i], scene->mMaterials );
+            }
+            Ogre::MeshPtr mesh = mMeshMaker->finishMesh();
+            mEntity = wxOgre::getSingleton().getSceneManager()->createEntity("Mesh", mesh->getName());	   
+            mMeshNode->attachObject(mEntity);
         }
 
-        mImportLogPanel->messageLogged(( boost::format("Read file %s ") % fd.GetPath().c_str() ).str() );
-        mImportLogPanel->messageLogged(( boost::format("Animations %d ") % scene->mNumAnimations).str() );
-        mImportLogPanel->messageLogged(( boost::format("Materials %d ") % scene->mNumMaterials).str() );
-        mImportLogPanel->messageLogged(( boost::format("Meshes %d ") %  scene->mNumMeshes).str() );
-        mImportLogPanel->messageLogged(( boost::format("Textures %d ") % scene->mNumTextures).str() );
-
-        mOgreControl->resetCamera();
-        if (mMeshNode == NULL)
-        {
-            Ogre::SceneManager *sceneMgr = wxOgre::getSingleton().getSceneManager();    
-            Ogre::SceneNode *rootNode = sceneMgr->getRootSceneNode();
-            mMeshNode = rootNode->createChildSceneNode();
-        }
-
-        for(std::size_t i = 0; i < scene->mNumMeshes; i++)
-        {
-           mMeshMaker->create( scene->mMeshes[i], scene->mMaterials );
-        }
-       Ogre::MeshPtr mesh = mMeshMaker->getMesh();
-	   mEntity = wxOgre::getSingleton().getSceneManager()->createEntity("Mesh", mesh->getName());	   
-       mMeshNode->attachObject(mEntity);            
     };
     
 }
 
 void MeshMixerFrame::OnFileSave(wxCommandEvent& event)
 {
+    wxFileDialog *fdlg = new wxFileDialog(this, wxT("Save a mesh"), wxEmptyString, wxEmptyString,
+                                          wxT("Ogre Mesh File|*.mesh|Any File|*.*"), wxOVERWRITE_PROMPT | wxFD_SAVE);
+
+    if (fdlg->ShowModal() == wxID_OK)
+    {
+        Ogre::String fname(std::string(fdlg->GetPath().mb_str(wxConvUTF8)));
+        wxFileName fn(fdlg->GetPath());
+        Ogre::MeshPtr mesh = mMeshMaker->getMesh();
+
+        if (!mesh.isNull())
+        {
+            // serialise the materials
+            Ogre::Mesh::SubMeshIterator it = mesh->getSubMeshIterator();
+            while(it.hasMoreElements())
+            {
+                Ogre::SubMesh* sm = it.getNext();
+                Ogre::String matName(sm->getMaterialName());
+                Ogre::MaterialManager *mmptr = Ogre::MaterialManager::getSingletonPtr();
+                Ogre::MaterialPtr materialPtr = mmptr->getByName(matName);
+                Ogre::MaterialSerializer ms;
+                ms.exportMaterial(materialPtr, matName + ".material", true);
+            }
+            Ogre::MeshSerializer *meshSerializer = new Ogre::MeshSerializer();
+            meshSerializer->exportMesh(mesh.getPointer(), Ogre::String(fn.GetFullPath().mb_str(wxConvUTF8)),  Ogre::Serializer::ENDIAN_NATIVE);
+        }
+
+    }
+
 }
 
 void MeshMixerFrame::OnFileSaveAs(wxCommandEvent& event)
@@ -367,5 +420,18 @@ void MeshMixerFrame::OnFileExit(wxCommandEvent& event)
 
 void MeshMixerFrame::OnViewFreeCamera(wxCommandEvent& event)
 {
-    mOgreControl->cameraTrackNode(mMeshNode);   
+
+    if (event.IsChecked())
+    {
+        mOgreControl->cameraTrackNode(mMeshNode);
+    } else {
+        mOgreControl->cameraTrackNode();
+    }
+
+}
+
+void MeshMixerFrame::OnViewWireframe(wxCommandEvent& event)
+{
+    mOgreControl->wireFrame(event.IsChecked());
+
 }

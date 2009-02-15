@@ -60,7 +60,7 @@ class MeshMixerFrame: public wxFrame
         void OnFileClose(wxCommandEvent& event);
         void OnFileExit(wxCommandEvent& event);
         void OnViewFreeCamera(wxCommandEvent& event);
-        
+        void OnViewWireframe(wxCommandEvent& event);
 
         wxMenuBar* mMenuBar;
         wxMenu* mFileMenu;        
@@ -84,7 +84,6 @@ class MeshMixerFrame: public wxFrame
         Ogre::RenderSystem* mDirectXRenderSystem;
 #endif
         Ogre::RenderSystem* mOpenGLRenderSystem;
-
         
         DECLARE_EVENT_TABLE();
         

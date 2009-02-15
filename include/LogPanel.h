@@ -16,7 +16,9 @@ using Ogre::String;
 class LogPanel : public wxPanel, public Ogre::LogListener
 {
 public:
-	LogPanel(wxWindow* parent, wxWindowID id = wxID_ANY, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxTAB_TRAVERSAL, const wxString& name = wxT( "LogPanel" ));
+	LogPanel(wxWindow* parent, wxWindowID id = wxID_ANY,
+             const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize,
+             long style = wxTAB_TRAVERSAL, const wxString& name = wxT("LogPanel"));
 	virtual ~LogPanel();
 
 	void attachLog(Ogre::Log *log);

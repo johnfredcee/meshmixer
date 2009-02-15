@@ -36,41 +36,14 @@ wxOgre::wxOgre(wxFrame* parent) :
 		mSceneMgr(0),
 		mRenderWindow(0),
 		mCameraNode(0),
-//		mLightNode(0),
 		mZoomScale(1)
 {
-// 	// Create all Ogre objects
-// 	createOgreRenderWindow(renderSystem);
-// 	// Start the rendering timer
-// 	toggleTimerRendering();
 }
 
 void wxOgre::createOgreRenderWindow()
 {
 	// See if an Ogre::Root already exists
-	mRoot = Ogre::Root::getSingletonPtr();
-	// If not, create one
-	if(!mRoot)
-	{
-		mRoot = new Ogre::Root();
-	}
-	
-	// If  maybe the Root already has one
-	if (!mRoot->getRenderSystem())
-	{
-		// At this point there are no rendersystems, so we
-		// can try to load in the previous configuration
-		if(!mRoot->restoreConfig())
-		{
-			// That failed so we have to show the Dialog
-			if(!mRoot->showConfigDialog())
-			{
-				// If the user canceled that there's nothing else we can do!
-				OGRE_EXCEPT(Ogre::Exception::ERR_INVALIDPARAMS, "No RenderSystem chosen", "wxOgre::createOgreRenderWindow");
-			}
-		}
-	}
-
+	mRoot = Ogre::Root::getSingletonPtr();  
 	mRenderWindow = mRoot->initialise(false);
 
 	// --------------------
@@ -86,10 +59,19 @@ void wxOgre::createOgreRenderWindow()
     
 	// prevents flickering
 	gtk_widget_set_double_buffered(privHandle, FALSE);
+
+
+    // this doesn't work w. Ogre 1.6.1 maybe this will fix it?
+    //gtk_widget_realize(privHandle);
+    
+
 	// grab the window object
 	GdkWindow* gdkWin = GTK_PIZZA(privHandle)->bin_window;
 	Display* display = GDK_WINDOW_XDISPLAY(gdkWin);
 	Window wid = GDK_WINDOW_XWINDOW(gdkWin);
+
+
+    //XSync(display,wid);
 
 	std::stringstream str;
 
@@ -114,7 +96,8 @@ void wxOgre::createOgreRenderWindow()
     
 #else
 #error Not supported on this platform.
-#endif        
+#endif
+
 	params["externalWindowHandle"] = handle;
 
 	// Get wx control window size
@@ -161,7 +144,8 @@ void wxOgre::createOgreRenderWindow()
     mZLight->setDiffuseColour(1.0f, 1.0f,1.0f);
     mZLight->setDirection(0.0f, 0.0f, -1.0f); 
 
-	//mLightNode->attachObject(mLight);
+
+
 }
 
 void wxOgre::wireFrame(bool wireframe)
@@ -214,7 +198,9 @@ wxOgre::~wxOgre()
 
 	Ogre::Root::getSingleton().detachRenderTarget(mRenderWindow);
 	mRenderWindow = 0;
-        delete mRoot;
+
+    delete mRoot;
+
 
 }
 
@@ -304,13 +290,14 @@ void wxOgre::update()
 {
  // ****************************************************
    // TODO: REMOVE THESE LINES! These are merely for test!
-    static float redTone = 0;
-    redTone += 0.01;
-    if(redTone>1.0)
-        redTone=0;
+
+   // static float redTone = 0;
+   // redTone += 0.01;
+   // if(redTone>1.0)
+   //     redTone=0;
    // ****************************************************
    if (mViewPort) {
-       mViewPort->setBackgroundColour(Ogre::ColourValue(redTone, 0.0f, 0.0f, 1.0f));     
+       mViewPort->setBackgroundColour(Ogre::ColourValue(0.2, 0.2f, 0.2f, 1.0f));     
        Ogre::Root::getSingletonPtr()->renderOneFrame();
    }
 }

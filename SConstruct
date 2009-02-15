@@ -1,3 +1,5 @@
+import os
+
 mode = ARGUMENTS.get('mode', "debug")
 
 # Setup our Build Environment, Smarter scripts might be able to change this at the command line,
@@ -10,7 +12,8 @@ else:
     env = Environment( CFLAGS="-Wall -O2" )
     
 # Our External Lib
-env.ParseConfig('pkg-config --libs --cflags OGRE')
+env["ENV"]["PKG_CONFIG_PATH"] = os.environ.get("PKG_CONFIG_PATH")
+env.ParseConfig('pkg-config OGRE --libs --cflags')
 env.ParseConfig('wx-config --libs --cxxflags')
 env.ParseConfig('pkg-config --libs --cflags gtk+-2.0')
 env.ParseConfig('pkg-config --libs --cflags gdk-2.0')

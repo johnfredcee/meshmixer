@@ -24,103 +24,96 @@
 
 unsigned MeshMaker::mCount = 0;
 
-MeshMaker::MeshMaker(Ogre::SceneManager *sceneMgr)
+MeshMaker::MeshMaker() :
+mLog(NULL),    
+mSceneMgr(NULL)
 {
-    // create the manual object
-    mSceneMgr = sceneMgr;
+
 }
 
 MeshMaker::~MeshMaker()
 {
 }
 
-Ogre::MaterialPtr MeshMaker::createMaterial(aiMaterial* mat)
+Ogre::MaterialPtr MeshMaker::createMaterial(int index, aiMaterial* mat)
 { 
-	unsigned static count = 0;
+	std::ostringstream matname; 
 
-    std::ostringstream matname;    
-    matname << "Material";
-    matname.width(4);
-    matname.fill('0');
-    matname << count;
-    count++;
-    Ogre::String matName = matname.str();
+	matname << mName << "_" << "Mat";
+	matname.width(4);
+	matname.fill('0');
+	matname << index;    
+	Ogre::String matName = matname.str();
 
-    Ogre::Log *olog = Ogre::LogManager::getSingletonPtr()->getDefaultLog();   
-    olog->logMessage( (boost::format("Creating %s") % matName).str() );
+	mLog->logMessage( (boost::format("Creating %s") % matName.c_str()).str() );
 
-    Ogre::MaterialPtr omat = Ogre::MaterialManager::getSingleton().create(matName, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+	Ogre::MaterialPtr omat = Ogre::MaterialManager::getSingleton().create(matName, "Converted");
 
-    omat->setReceiveShadows(false); 
+	omat->setReceiveShadows(false); 
 
-    omat->getTechnique(0)->getPass(0)->setShadingMode(Ogre::SO_GOURAUD);    
-    omat->getTechnique(0)->getPass(0)->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
-    omat->getTechnique(0)->getPass(0)->setLightingEnabled(true);
-    omat->getTechnique(0)->getPass(0)->setDepthCheckEnabled(true);
+	omat->getTechnique(0)->getPass(0)->setShadingMode(Ogre::SO_GOURAUD);    
+	omat->getTechnique(0)->getPass(0)->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
+	omat->getTechnique(0)->getPass(0)->setLightingEnabled(true);
+	omat->getTechnique(0)->getPass(0)->setDepthCheckEnabled(true);
 
-    // ambient
-    aiColor4D clr(0.0f, 0.0f, 0.0f, 1.0);    
-    aiGetMaterialColor(mat, AI_MATKEY_COLOR_AMBIENT,  &clr);
-    omat->getTechnique(0)->getPass(0)->setAmbient(clr.r, clr.g, clr.b); 
+	// ambient
+	aiColor4D clr(0.0f, 0.0f, 0.0f, 1.0);    
+	aiGetMaterialColor(mat, AI_MATKEY_COLOR_AMBIENT,  &clr);
+	omat->getTechnique(0)->getPass(0)->setAmbient(clr.r, clr.g, clr.b); 
 
-    // diffuse
-    clr = aiColor4D(0.0f, 0.0f, 0.0f, 1.0f);    
-    aiGetMaterialColor(mat, AI_MATKEY_COLOR_DIFFUSE, &clr);
-    omat->getTechnique(0)->getPass(0)->setDiffuse(clr.r, clr.g, clr.b, clr.a); 
+	// diffuse
+	clr = aiColor4D(0.0f, 0.0f, 0.0f, 1.0f);    
+	aiGetMaterialColor(mat, AI_MATKEY_COLOR_DIFFUSE, &clr);
+	omat->getTechnique(0)->getPass(0)->setDiffuse(clr.r, clr.g, clr.b, clr.a); 
 
-    //// specular
-    //clr = aiColor4D(0.0f, 0.0f, 0.0f, 1.0f);
-    //aiGetMaterialColor(mat, AI_MATKEY_COLOR_SPECULAR, &clr);
-    //r = clr.r;  g = clr.g;  b = clr.b;  a = clr.a;
-    //olog->logMessage( ( boost::format("Specular %8.4f %8.4f %8.4f %8.4f") % r % g % b % a).str() );    
-    //omat->getTechnique(0)->getPass(0)->setSpecular(clr.r, clr.g, clr.b, clr.a);
+	// specular
+	clr = aiColor4D(0.0f, 0.0f, 0.0f, 1.0f);
+	aiGetMaterialColor(mat, AI_MATKEY_COLOR_SPECULAR, &clr);
+	omat->getTechnique(0)->getPass(0)->setSpecular(clr.r, clr.g, clr.b, clr.a);
 
-    //// emissive
-    //clr = aiColor4D(0.0f, 0.0f, 0.0f, 1.0f);
-    //aiGetMaterialColor(mat, AI_MATKEY_COLOR_EMISSIVE, &clr);
-    //r = clr.r;  g = clr.g;  b = clr.b;  a = clr.a;
-    //olog->logMessage( ( boost::format("Emissive %8.4f %8.4f %8.4f %8.4f") % r % g % b % a).str() );    
-    //omat->getTechnique(0)->getPass(0)->setSelfIllumination(clr.r, clr.g, clr.b);
+	// emissive
+	clr = aiColor4D(0.0f, 0.0f, 0.0f, 1.0f);
+	aiGetMaterialColor(mat, AI_MATKEY_COLOR_EMISSIVE, &clr);
+	omat->getTechnique(0)->getPass(0)->setSelfIllumination(clr.r, clr.g, clr.b);
 
-    return omat;
+	enum aiTextureType type = aiTextureType_DIFFUSE;
+	static aiString path[4096];
+	aiTextureMapping mapping;    // the mapping (should be uv for now)
+	unsigned int uvindex;                 // the texture uv index channel
+	float blend;                 // blend
+	aiTextureOp op;              // op
+	aiTextureMapMode mapmode;    // mapmode
+	if (mat->GetTexture(type, index, path, &mapping, &uvindex, &blend, &op, &mapmode) == AI_SUCCESS)
+	{
+		mLog->logMessage( ( boost::format("Found texture %s for channel %d ") % path % uvindex).str() );
+	}
+	omat->load();
+	return omat;
 }
 
-bool MeshMaker::create(const aiMesh *m, aiMaterial** mats)
+
+bool MeshMaker::createSubMesh(int index, const aiMesh *m, aiMaterial** mats)
 {
-    static unsigned count = 0;
+	wxASSERT(mLog != NULL);
+	wxASSERT(!mMesh.isNull());
 
+	mLog->logMessage( (boost::format("Creating %s") % mName).str() );
 
-    Ogre::Log *olog = Ogre::LogManager::getSingletonPtr()->getDefaultLog();    
-    olog->logMessage( (boost::format("Creating %s") % mName).str() );
+	// create the material
+	aiMaterial *mat = mats[m->mMaterialIndex];
 
-   
-    // create the material
-    aiMaterial *mat = mats[m->mMaterialIndex];
-	Ogre::MaterialPtr matptr = createMaterial(mat);
-	
-	std::ostringstream meshname;    
-	meshname << "Mesh";
-	meshname.width(4);
-	meshname.fill('0');
-	meshname << mCount;
-	mCount++;
-	mName = meshname.str();
+	Ogre::MaterialPtr matptr( createMaterial(m->mMaterialIndex, mat) );
 
-
-    if (mMesh.isNull()) {
-		mMesh = Ogre::MeshManager::getSingleton().createManual(mName + ".mesh","Custom");
-    }
-
-    // now begin the object definition
-    // We create a submesh per material
+	// now begin the object definition
+	// We create a submesh per material
 	Ogre::SubMesh* submesh = mMesh->createSubMesh();
 
 	// prime pointers to vertex related data
-    aiVector3D *vec = m->mVertices;
-    aiVector3D *norm = m->mNormals;
-    aiVector3D *uv = m->mTextureCoords[0];
-    aiColor4D *col = m->mColors[0]; 
-	
+	aiVector3D *vec = m->mVertices;
+	aiVector3D *norm = m->mNormals;
+	aiVector3D *uv = m->mTextureCoords[0];
+	aiColor4D *col = m->mColors[0]; 
+
 	// We must create the vertex data, indicating how many vertices there will be
 	submesh->useSharedVertices = false;
 	submesh->vertexData = new Ogre::VertexData();
@@ -133,32 +126,32 @@ bool MeshMaker::create(const aiMesh *m, aiMaterial** mats)
 	size_t offset = 0;
 	offset += declaration->addElement(source,offset,Ogre::VET_FLOAT3,Ogre::VES_POSITION).getSize();
 
-    olog->logMessage((boost::format(" %d vertices ") % m->mNumVertices).str());
-    if (norm)
-    {
-        olog->logMessage((boost::format(" %d normals ") % m->mNumVertices).str() );
+	mLog->logMessage((boost::format(" %d vertices ") % m->mNumVertices).str());
+	if (norm)
+	{
+		mLog->logMessage((boost::format(" %d normals ") % m->mNumVertices).str() );
 		offset += declaration->addElement(source,offset,Ogre::VET_FLOAT3,Ogre::VES_NORMAL).getSize();
-    }
+	}
 
-    if (uv)
-    {
-        olog->logMessage((boost::format(" %d uvs ") % m->mNumVertices).str() );
+	if (uv)
+	{
+		mLog->logMessage((boost::format(" %d uvs ") % m->mNumVertices).str() );
 		offset += declaration->addElement(source,offset,Ogre::VET_FLOAT2,Ogre::VES_TEXTURE_COORDINATES).getSize();		
-    }
+	}
 
-    // if (col)
-    // {
-    //     olog->logMessage((boost::format(" %d colours ") % m->mNumVertices).str() );
-	// 	offset += declaration->addElement(source,offset,VET_FLOAT3,VES_DIFFUSE).getSize();
-    // }
+	if (col)
+	{
+		mLog->logMessage((boost::format(" %d colours ") % m->mNumVertices).str() );
+		offset += declaration->addElement(source,offset,Ogre::VET_FLOAT3,Ogre::VES_DIFFUSE).getSize();
+	}
 
-     // We create the hardware vertex buffer
+	// We create the hardware vertex buffer
 	Ogre::HardwareVertexBufferSharedPtr vbuffer =
 		Ogre::HardwareBufferManager::getSingleton().createVertexBuffer(declaration->getVertexSize(source), // == offset
-																 submesh->vertexData->vertexCount,   // == nbVertices
-																 Ogre::HardwareBuffer::HBU_STATIC_WRITE_ONLY);
+		submesh->vertexData->vertexCount,   // == nbVertices
+		Ogre::HardwareBuffer::HBU_STATIC_WRITE_ONLY);
 
-    // Now we get access to the buffer to fill it.  During so we record the bounding box.
+	// Now we get access to the buffer to fill it.  During so we record the bounding box.
 	float* vdata = static_cast<float*>(vbuffer->lock(Ogre::HardwareBuffer::HBL_DISCARD));
 	for (size_t i=0;i < m->mNumVertices; ++i)
 	{
@@ -186,29 +179,29 @@ bool MeshMaker::create(const aiMesh *m, aiMaterial** mats)
 			*vdata++ = uv->y;
 			uv++;
 		}
-		
-		// if (col)
-		// {
-		// 	*vdata++ = col->r;
-		// 	*vdata++ = col->g;
-		// 	*vdata++ = col->b;
-		// 	// here be dragons *vdata++ = col->a;
-		// }
+
+		if (col)
+		{
+			*vdata++ = col->r;
+			*vdata++ = col->g;
+			*vdata++ = col->b;
+			// here be dragons *vdata++ = col->a;
+		}
 	}
-	
+
 	vbuffer->unlock();
 	submesh->vertexData->vertexBufferBinding->setBinding(source,vbuffer);
 
-    olog->logMessage((boost::format(" %d faces ") % m->mNumFaces).str() );
-    aiFace *f = m->mFaces;
+	mLog->logMessage((boost::format(" %d faces ") % m->mNumFaces).str() );
+	aiFace *f = m->mFaces;
 
 	// Creates the index data
 	submesh->indexData->indexStart = 0;
 	submesh->indexData->indexCount = m->mNumFaces * 3;
 	submesh->indexData->indexBuffer =
 		Ogre::HardwareBufferManager::getSingleton().createIndexBuffer(Ogre::HardwareIndexBuffer::IT_16BIT,
-																submesh->indexData->indexCount,
-																Ogre::HardwareBuffer::HBU_STATIC_WRITE_ONLY);
+		submesh->indexData->indexCount,
+		Ogre::HardwareBuffer::HBU_STATIC_WRITE_ONLY);
 	Ogre::uint16* idata = static_cast<Ogre::uint16*>(submesh->indexData->indexBuffer->lock(Ogre::HardwareBuffer::HBL_DISCARD));
 
 	// poke in the face data
@@ -221,20 +214,40 @@ bool MeshMaker::create(const aiMesh *m, aiMaterial** mats)
 		f++;
 	}
 	submesh->indexData->indexBuffer->unlock();
-	
+
 	// Finally we set a material to the submesh
 	submesh->setMaterialName(matptr->getName());  
 
-    return true;
-    
+	return true;
+
+}
+
+bool MeshMaker::createMesh()
+{
+	wxASSERT(mLog != NULL);
+	std::ostringstream meshname;    
+	meshname << mName;
+	meshname.width(4);
+	meshname.fill('0');
+	meshname << mCount;
+	mCount++;
+	mName = meshname.str();
+
+	wxASSERT(mMesh.isNull());
+	if (mMesh.isNull()) {
+		mMesh = Ogre::MeshManager::getSingleton().createManual(mName + ".mesh","Converted");
+	}
+	mSceneMgr = wxOgre::getSingleton().getSceneManager();
+	return true;
 }
 
 void MeshMaker::destroy()
 {
-    //wxASSERT(!mMesh.isNull());
+	mMesh->unload();
+	mMesh.setNull(); 
 }
-        
-Ogre::MeshPtr MeshMaker::getMesh()
+
+Ogre::MeshPtr MeshMaker::finishMesh()
 {
 	// We must indicate the bounding box
 	mMesh->_setBounds(mAAB);  
@@ -243,6 +256,6 @@ Ogre::MeshPtr MeshMaker::getMesh()
 	// And we load the mesh
 	mMesh->load();
 
-    return mMesh;
+	return mMesh;
 }
 

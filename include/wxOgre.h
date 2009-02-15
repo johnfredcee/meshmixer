@@ -49,10 +49,6 @@ public Ogre::Singleton<wxOgre>
     {
         mZoomScale = zoomScale;
     }
- /*   inline Ogre::Light* getLight() const
-    {
-        return (mLight);
-    }*/
 
     void resetCamera();
 
