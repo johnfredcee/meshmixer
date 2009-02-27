@@ -136,11 +136,11 @@ bool MeshMaker::createSubMesh(int index, const aiMesh *m, aiMaterial** mats)
 		offset += declaration->addElement(source,offset,Ogre::VET_FLOAT2,Ogre::VES_TEXTURE_COORDINATES).getSize();		
     }
 
-    // if (col)
-    // {
-    //     mLog->logMessage((boost::format(" %d colours ") % m->mNumVertices).str() );
-	// 	offset += declaration->addElement(source,offset,VET_FLOAT3,VES_DIFFUSE).getSize();
-    // }
+    if (col)
+    {
+        mLog->logMessage((boost::format(" %d colours ") % m->mNumVertices).str() );
+		offset += declaration->addElement(source,offset,VET_FLOAT3,VES_DIFFUSE).getSize();
+    }
 
      // We create the hardware vertex buffer
 	Ogre::HardwareVertexBufferSharedPtr vbuffer =
