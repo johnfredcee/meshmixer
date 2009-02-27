@@ -43,8 +43,7 @@ wxOgre::wxOgre(wxFrame* parent) :
 void wxOgre::createOgreRenderWindow()
 {
 	// See if an Ogre::Root already exists
-	mRoot = Ogre::Root::getSingletonPtr();
-	
+	mRoot = Ogre::Root::getSingletonPtr();  
 	mRenderWindow = mRoot->initialise(false);
 
 	// --------------------
@@ -61,13 +60,16 @@ void wxOgre::createOgreRenderWindow()
 	// prevents flickering
 	gtk_widget_set_double_buffered(privHandle, FALSE);
 
+
     // this doesn't work w. Ogre 1.6.1 maybe this will fix it?
     //gtk_widget_realize(privHandle);
     
+
 	// grab the window object
 	GdkWindow* gdkWin = GTK_PIZZA(privHandle)->bin_window;
 	Display* display = GDK_WINDOW_XDISPLAY(gdkWin);
 	Window wid = GDK_WINDOW_XWINDOW(gdkWin);
+
 
     //XSync(display,wid);
 
@@ -95,6 +97,7 @@ void wxOgre::createOgreRenderWindow()
 #else
 #error Not supported on this platform.
 #endif
+
 	params["externalWindowHandle"] = handle;
 
 	// Get wx control window size
@@ -140,6 +143,8 @@ void wxOgre::createOgreRenderWindow()
     mZLight->setType(Ogre::Light::LT_DIRECTIONAL);
     mZLight->setDiffuseColour(1.0f, 1.0f,1.0f);
     mZLight->setDirection(0.0f, 0.0f, -1.0f); 
+
+
 
 }
 
@@ -193,7 +198,9 @@ wxOgre::~wxOgre()
 
 	Ogre::Root::getSingleton().detachRenderTarget(mRenderWindow);
 	mRenderWindow = 0;
+
     delete mRoot;
+
 
 }
 
@@ -283,6 +290,7 @@ void wxOgre::update()
 {
  // ****************************************************
    // TODO: REMOVE THESE LINES! These are merely for test!
+
    // static float redTone = 0;
    // redTone += 0.01;
    // if(redTone>1.0)

@@ -84,7 +84,6 @@ class MeshMixerFrame: public wxFrame
         Ogre::RenderSystem* mDirectXRenderSystem;
 #endif
         Ogre::RenderSystem* mOpenGLRenderSystem;
-
         
         DECLARE_EVENT_TABLE();
         

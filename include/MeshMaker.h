@@ -13,16 +13,17 @@ namespace Ogre {
 
 class MeshMaker
 {
-
     public:
         MeshMaker();
         ~MeshMaker();
         bool createMesh();
         bool createSubMesh(int index, const aiMesh *sc, aiMaterial **mat);
         void destroy();
-        Ogre::MeshPtr getMesh();
         void setName(const std::string& name)	{ mName = name;	}
         void setLog(Ogre::Log *olog) { mLog = olog;  }
+   	    Ogre::MeshPtr getMesh(void) { return mMesh; };
+	    Ogre::MeshPtr finishMesh();
+
     private:
         Ogre::Log *mLog;
         Ogre::MaterialPtr createMaterial(int index, aiMaterial* mat);        
@@ -34,4 +35,5 @@ class MeshMaker
 };
 
 #endif
+
 
