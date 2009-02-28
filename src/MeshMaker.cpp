@@ -1,7 +1,9 @@
 
 #include "OgreRoot.h"
 #include "OgreSceneManager.h"
-#include "OgreManualObject.h"
+#include "OgreImage.h"
+#include "OgreTexture.h"
+#include "OgreTextureManager.h"
 #include "OgreMaterial.h"
 #include "OgreMaterialManager.h"
 #include "OgreLog.h"
@@ -85,7 +87,28 @@ Ogre::MaterialPtr MeshMaker::createMaterial(int index, aiMaterial* mat)
 	aiTextureMapMode mapmode;    // mapmode
 	if (mat->GetTexture(type, index, path, &mapping, &uvindex, &blend, &op, &mapmode) == AI_SUCCESS)
 	{
-		mLog->logMessage( ( boost::format("Found texture %s for channel %d ") % path % uvindex).str() );
+        mLog->logMessage( ( boost::format("Found texture %s for channel %d ") % path % uvindex).str() );
+
+        // attempt to load the image2
+        Ogre::Image image;
+        Ogre::String pathname(path);
+        mLog->logMessage( ( boost::format("Loading image %s") % pathname.c_str()).str() );
+        image.load(pathname, "Converted");
+
+        std::ostringstream texname; 
+
+        texname << mName << "_" << "Mat";
+        texname.width(4);
+        texname.fill('0');
+        texname << index;    
+        Ogre::String texName = texname.str();
+
+		Ogre::TextureManager *txmgr = Ogre::TextureManager::getSingletonPtr();
+        txmgr->create(texName, "Converted");
+        Ogre::TexturePtr texptr = txmgr->loadImage(texName, "Converted", image);
+
+        Ogre::TextureUnitState* texUnitState = omat->getTechnique(0)->getPass(0)->createTextureUnitState(texName);
+        omat->getTechnique(0)->getPass(0)->addTextureUnitState(texUnitState);
 	}
 	omat->load();
 	return omat;
