@@ -40,7 +40,8 @@ MeshMaker::~MeshMaker()
 Ogre::MaterialPtr MeshMaker::createMaterial(int index, aiMaterial* mat)
 { 
 	std::ostringstream matname; 
-
+    Ogre::MaterialManager* omatMgr =  Ogre::MaterialManager::getSingletonPtr();
+    
 	matname << mName << "_" << "Mat";
 	matname.width(4);
 	matname.fill('0');
@@ -49,8 +50,12 @@ Ogre::MaterialPtr MeshMaker::createMaterial(int index, aiMaterial* mat)
 
 	mLog->logMessage( (boost::format("Creating %s") % matName.c_str()).str() );
 
-	Ogre::MaterialPtr omat = Ogre::MaterialManager::getSingleton().create(matName, "Converted");
 
+    Ogre::ResourceManager::ResourceCreateOrRetrieveResult status = omatMgr->createOrRetrieve(matName, "Converted");
+	Ogre::MaterialPtr omat = status.first;
+    if (!status.second)
+        return omat;
+    
 	omat->setReceiveShadows(false); 
 
 	omat->getTechnique(0)->getPass(0)->setShadingMode(Ogre::SO_GOURAUD);    
@@ -167,6 +172,7 @@ bool MeshMaker::createSubMesh(int index, const aiMesh *m, aiMaterial** mats)
 		mLog->logMessage((boost::format(" %d colours ") % m->mNumVertices).str() );
 		offset += declaration->addElement(source,offset,Ogre::VET_FLOAT3,Ogre::VES_DIFFUSE).getSize();
 	}
+
 
 	// We create the hardware vertex buffer
 	Ogre::HardwareVertexBufferSharedPtr vbuffer =
