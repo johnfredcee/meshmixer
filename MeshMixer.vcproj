@@ -18,7 +18,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory="$(SolutionDir)\bin\win32\$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
+			IntermediateDirectory="$(SolutionDir)\bin\win32\$(ConfigurationName)"
 			ConfigurationType="1"
 			CharacterSet="1"
 			>
@@ -40,8 +40,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="C:\projects\libraries\boost_1_37_0;C:\projects\libraries\assimp\include;&quot;C:\projects\libraries\wxWidgets-2.8.9\include&quot;;&quot;C:\projects\libraries\wxWidgets-2.8.9\contrib\include&quot;;&quot;C:\projects\libraries\wxWidgets-2.8.9\lib\vc_dll\mswud&quot;;C:\projects\libraries\ogre\OgreMain\include;.\include"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;__WINDOWS__;__WXMSW__;__WXDEBUG__;WXDEBUG=1;WXUSINGDLL"
+				AdditionalIncludeDirectories="&quot;C:\projects\libraries\STLport-5.2.1\stlport&quot;;C:\projects\libraries\boost_1_37_0;C:\projects\libraries\assimp\include;&quot;C:\projects\libraries\wxWidgets-2.8.9\include&quot;;&quot;C:\projects\libraries\wxWidgets-2.8.9\contrib\include&quot;;&quot;C:\projects\libraries\wxWidgets-2.8.9\lib\vc_dll\mswud&quot;;C:\projects\libraries\ogre\OgreMain\include;.\include"
+				PreprocessorDefinitions="WIN32;_DEBUG;_STLP_DEBUG=1;_WINDOWS;__WINDOWS__;__WXMSW__;__WXDEBUG__;WXDEBUG=1;WXUSINGDLL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -61,9 +61,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="OgreMain_d.lib assimp_d.lib wxmsw28ud_adv.lib wxmsw28ud_media.lib wxmsw28ud_aui.lib wxmsw28ud_core.lib wxbase28ud.lib"
-				LinkIncremental="1"
-				AdditionalLibraryDirectories="&quot;C:\projects\libraries\wxWidgets-2.8.9\lib\vc_dll&quot;;C:\projects\libraries\assimp\lib\assimp_debug_win32;C:\projects\libraries\ogre\lib"
+				AdditionalDependencies="OgreMain_d.lib assimp.lib wxmsw28ud_adv.lib wxmsw28ud_media.lib wxmsw28ud_aui.lib wxmsw28ud_core.lib wxbase28ud.lib"
+				LinkIncremental="2"
+				AdditionalLibraryDirectories="&quot;C:\projects\libraries\STLport-5.2.1\lib&quot;;&quot;C:\projects\libraries\wxWidgets-2.8.9\lib\vc_dll&quot;;&quot;C:\projects\libraries\assimp\lib\assimp_debug-dll_win32&quot;;C:\projects\libraries\ogre\lib"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"

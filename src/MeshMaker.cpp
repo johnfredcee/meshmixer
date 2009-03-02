@@ -1,6 +1,7 @@
 
 #include "OgreRoot.h"
 #include "OgreSceneManager.h"
+#include "OgreDataStream.h"
 #include "OgreImage.h"
 #include "OgreTexture.h"
 #include "OgreTextureManager.h"
@@ -39,9 +40,21 @@ MeshMaker::~MeshMaker()
 
 Ogre::MaterialPtr MeshMaker::createMaterial(int index, aiMaterial* mat)
 { 
+    // extreme fallback texture -- 2x2 hot pink
+	static Ogre::uint8 s_RGB[] = {128, 0, 255, 128, 0, 255, 128, 0, 255, 128, 0, 255};
+
 	std::ostringstream matname; 
     Ogre::MaterialManager* omatMgr =  Ogre::MaterialManager::getSingletonPtr();
-    
+	enum aiTextureType type = aiTextureType_DIFFUSE;
+	static aiString path;
+	aiTextureMapping mapping = aiTextureMapping_UV;       // the mapping (should be uv for now)
+	unsigned int uvindex = 0;                             // the texture uv index channel
+	float blend = 1.0f;                                   // blend
+	aiTextureOp op = aiTextureOp_Multiply;                // op
+	aiTextureMapMode mapmode =  aiTextureMapMode_Wrap;    // mapmode
+	std::ostringstream texname; 
+
+   
 	matname << mName << "_" << "Mat";
 	matname.width(4);
 	matname.fill('0');
@@ -83,37 +96,57 @@ Ogre::MaterialPtr MeshMaker::createMaterial(int index, aiMaterial* mat)
 	aiGetMaterialColor(mat, AI_MATKEY_COLOR_EMISSIVE, &clr);
 	omat->getTechnique(0)->getPass(0)->setSelfIllumination(clr.r, clr.g, clr.b);
 
-	enum aiTextureType type = aiTextureType_DIFFUSE;
-	static aiString path[4096];
-	aiTextureMapping mapping;    // the mapping (should be uv for now)
-	unsigned int uvindex;                 // the texture uv index channel
-	float blend;                 // blend
-	aiTextureOp op;              // op
-	aiTextureMapMode mapmode;    // mapmode
-	if (mat->GetTexture(type, index, path, &mapping, &uvindex, &blend, &op, &mapmode) == AI_SUCCESS)
+	if (mat->GetTexture(type, 0, &path) == AI_SUCCESS)
 	{
-        mLog->logMessage( ( boost::format("Found texture %s for channel %d ") % path % uvindex).str() );
+        mLog->logMessage( ( boost::format("Found texture %s for channel %d ") % path.data % uvindex).str() );
 
-        // attempt to load the image2
+        // attempt to load the image
         Ogre::Image image;
-        Ogre::String pathname(path);
-        mLog->logMessage( ( boost::format("Loading image %s") % pathname.c_str()).str() );
-        image.load(pathname, "Converted");
 
-        std::ostringstream texname; 
+        Ogre::String pathname(path.data);
+		pathname = mDir + "\\" + path.data;
+        mLog->logMessage( ( boost::format("Loading image %s") % path.data ).str() );
 
-        texname << mName << "_" << "Mat";
-        texname.width(4);
-        texname.fill('0');
-        texname << index;    
-        Ogre::String texName = texname.str();
+		std::ifstream imgstream;
+		Ogre::FileStreamDataStream* pFS = 0;
+		imgstream.open(pathname.c_str(), std::ios::binary);
+		if (imgstream.is_open())
+		{
+			pFS = new Ogre::FileStreamDataStream(&imgstream, false);
+			Ogre::DataStreamPtr strm(pFS);
+			if (!strm->size() || strm->size() == 0xffffffff)
+			{
+				// fall back to our very simple and very hardcoded hot-pink version
+				Ogre::DataStreamPtr altStrm(new Ogre::MemoryDataStream(s_RGB, sizeof(s_RGB)));
+				image.loadRawData(altStrm, 2, 2, Ogre::PF_R8G8B8);
+				boost::format("Could not load texture, falling back to hotpink");
+			} else 
+			{	
+                // extract extension from filename
+                size_t pos = pathname.find_last_of('.');
+		        Ogre::String ext = pathname.substr(pos+1);
+				image.load(strm, ext);
+				imgstream.close();
+			}
+		} else {
+			// fall back to our very simple and very hardcoded hot-pink version
+			Ogre::DataStreamPtr altStrm(new Ogre::MemoryDataStream(s_RGB, sizeof(s_RGB)));
+			image.loadRawData(altStrm, 2, 2, Ogre::PF_R8G8B8);
+			boost::format("Could not load texture, falling back to hotpink");
+		}
+	
+		texname << mName << "_" << "Tex";
+		texname.width(4);
+		texname.fill('0');
+		texname << index;    
+		Ogre::String texName = texname.str();
 
 		Ogre::TextureManager *txmgr = Ogre::TextureManager::getSingletonPtr();
-        txmgr->create(texName, "Converted");
-        Ogre::TexturePtr texptr = txmgr->loadImage(texName, "Converted", image);
+		Ogre::TexturePtr texptr = txmgr->loadImage(texName, "Converted", image);
 
-        Ogre::TextureUnitState* texUnitState = omat->getTechnique(0)->getPass(0)->createTextureUnitState(texName);
-        omat->getTechnique(0)->getPass(0)->addTextureUnitState(texUnitState);
+		Ogre::TextureUnitState* texUnitState = omat->getTechnique(0)->getPass(0)->createTextureUnitState(texName);
+		omat->getTechnique(0)->getPass(0)->addTextureUnitState(texUnitState);
+
 	}
 	omat->load();
 	return omat;

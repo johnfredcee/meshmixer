@@ -333,6 +333,7 @@ void MeshMixerFrame::OnFileOpen(wxCommandEvent& event)
         std::string meshPath(fd.GetPath().mb_str(wxConvUTF8));
         wxFileName fn(fd.GetPath());
         std::string meshName(fn.GetName().mb_str(wxConvUTF8));
+		std::string meshDir(fn.GetPath().mb_str(wxConvUTF8));
 
         Assimp::Importer importer;
         const aiScene* scene = importer.ReadFile( meshPath,  mOptionsPanel->getOptions());
@@ -357,10 +358,11 @@ void MeshMixerFrame::OnFileOpen(wxCommandEvent& event)
 			}  else {
 				mOgreControl->resetCamera();
 			}
-            
+
+			mMeshMaker->setDirectory(meshDir);            
             mMeshMaker->setName(meshName);
             mMeshMaker->createMesh();
-            for(int i = 0; i < scene->mNumMeshes; i++)
+            for(size_t i = 0; i < scene->mNumMeshes; i++)
             {
                 mMeshMaker->createSubMesh( i, scene->mMeshes[i], scene->mMaterials );
             }

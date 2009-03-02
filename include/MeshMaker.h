@@ -20,6 +20,7 @@ class MeshMaker
         bool createSubMesh(int index, const aiMesh *sc, aiMaterial **mat);
         void destroy();
         void setName(const std::string& name)	{ mName = name;	}
+        void setDirectory(const std::string& dir)	{ mDir = dir;	}
         void setLog(Ogre::Log *olog) { mLog = olog;  }
    	    Ogre::MeshPtr getMesh(void) { return mMesh; };
 	    Ogre::MeshPtr finishMesh();
@@ -30,6 +31,7 @@ class MeshMaker
         Ogre::SceneManager *mSceneMgr;
         Ogre::MeshPtr mMesh;
         Ogre::String mName;
+	    Ogre::String mDir;
         Ogre::AxisAlignedBox mAAB;        
         static unsigned mCount;
 };
