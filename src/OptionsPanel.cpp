@@ -44,6 +44,7 @@ OptionsPanel::OptionsPanel(wxWindow* parent, wxWindowID id /* = wxID_ANY */, con
 	mCheckBox1 = new wxCheckBox( this, JOIN_IDENTICAL_VERTICES_ID,  wxT("Join Identical Vertices" ));
     mCheckBox2 = new wxCheckBox( this, CONVERT_TO_LH_ID, wxT("Convert to Left Handed"));
     mCheckBox3 = new wxCheckBox( this, TRIANGULATE_ID, wxT("Triangulate"));
+	mCheckBox3->SetValue(true);
     mCheckBox4 = new wxCheckBox( this, REMOVE_COMPONENT_ID, wxT("Remove Components"));
     mCheckBox5 = new wxCheckBox( this, GENERATE_NORMALS_ID, wxT("Generate Normals"));
     mCheckBox6 = new wxCheckBox( this, GENERATE_SMOOTH_NORMALS_ID, wxT("Generate Smooth Normals"));
@@ -92,6 +93,7 @@ OptionsPanel::~OptionsPanel()
 
 unsigned int OptionsPanel::getOptions()
 {
+	TransferDataFromWindow();
     return mOptions;
 }
 

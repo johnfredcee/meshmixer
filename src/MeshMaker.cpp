@@ -51,7 +51,7 @@ Ogre::MaterialPtr MeshMaker::createMaterial(int index, aiMaterial* mat)
 	unsigned int uvindex = 0;                             // the texture uv index channel
 	float blend = 1.0f;                                   // blend
 	aiTextureOp op = aiTextureOp_Multiply;                // op
-	aiTextureMapMode mapmode =  aiTextureMapMode_Wrap;    // mapmode
+	aiTextureMapMode mapmode[2] =  { aiTextureMapMode_Wrap, aiTextureMapMode_Wrap };    // mapmode
 	std::ostringstream texname; 
 
    

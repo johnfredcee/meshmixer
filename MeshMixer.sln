@@ -2,17 +2,56 @@
 Microsoft Visual Studio Solution File, Format Version 9.00
 # Visual C++ Express 2005
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MeshMixer", "MeshMixer.vcproj", "{1DA068D1-0E76-4343-A1FD-9C57844AFAF0}"
+	ProjectSection(ProjectDependencies) = postProject
+		{5691E159-2D9B-407F-971F-EA5C592DC524} = {5691E159-2D9B-407F-971F-EA5C592DC524}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "assimp", "..\libraries\assimp\workspaces\vc8\assimp.vcproj", "{5691E159-2D9B-407F-971F-EA5C592DC524}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
+		debug-dll|Win32 = debug-dll|Win32
+		debug-noboost-st|Win32 = debug-noboost-st|Win32
+		debug-st|Win32 = debug-st|Win32
 		Release|Win32 = Release|Win32
+		release-dll|Win32 = release-dll|Win32
+		release-noboost-st|Win32 = release-noboost-st|Win32
+		release-st|Win32 = release-st|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{1DA068D1-0E76-4343-A1FD-9C57844AFAF0}.Debug|Win32.ActiveCfg = Debug|Win32
 		{1DA068D1-0E76-4343-A1FD-9C57844AFAF0}.Debug|Win32.Build.0 = Debug|Win32
+		{1DA068D1-0E76-4343-A1FD-9C57844AFAF0}.debug-dll|Win32.ActiveCfg = Debug|Win32
+		{1DA068D1-0E76-4343-A1FD-9C57844AFAF0}.debug-dll|Win32.Build.0 = Debug|Win32
+		{1DA068D1-0E76-4343-A1FD-9C57844AFAF0}.debug-noboost-st|Win32.ActiveCfg = Debug|Win32
+		{1DA068D1-0E76-4343-A1FD-9C57844AFAF0}.debug-noboost-st|Win32.Build.0 = Debug|Win32
+		{1DA068D1-0E76-4343-A1FD-9C57844AFAF0}.debug-st|Win32.ActiveCfg = Debug|Win32
+		{1DA068D1-0E76-4343-A1FD-9C57844AFAF0}.debug-st|Win32.Build.0 = Debug|Win32
 		{1DA068D1-0E76-4343-A1FD-9C57844AFAF0}.Release|Win32.ActiveCfg = Release|Win32
 		{1DA068D1-0E76-4343-A1FD-9C57844AFAF0}.Release|Win32.Build.0 = Release|Win32
+		{1DA068D1-0E76-4343-A1FD-9C57844AFAF0}.release-dll|Win32.ActiveCfg = Release|Win32
+		{1DA068D1-0E76-4343-A1FD-9C57844AFAF0}.release-dll|Win32.Build.0 = Release|Win32
+		{1DA068D1-0E76-4343-A1FD-9C57844AFAF0}.release-noboost-st|Win32.ActiveCfg = Release|Win32
+		{1DA068D1-0E76-4343-A1FD-9C57844AFAF0}.release-noboost-st|Win32.Build.0 = Release|Win32
+		{1DA068D1-0E76-4343-A1FD-9C57844AFAF0}.release-st|Win32.ActiveCfg = Release|Win32
+		{1DA068D1-0E76-4343-A1FD-9C57844AFAF0}.release-st|Win32.Build.0 = Release|Win32
+		{5691E159-2D9B-407F-971F-EA5C592DC524}.Debug|Win32.ActiveCfg = debug|Win32
+		{5691E159-2D9B-407F-971F-EA5C592DC524}.Debug|Win32.Build.0 = debug|Win32
+		{5691E159-2D9B-407F-971F-EA5C592DC524}.debug-dll|Win32.ActiveCfg = debug-dll|Win32
+		{5691E159-2D9B-407F-971F-EA5C592DC524}.debug-dll|Win32.Build.0 = debug-dll|Win32
+		{5691E159-2D9B-407F-971F-EA5C592DC524}.debug-noboost-st|Win32.ActiveCfg = debug-noboost-st|Win32
+		{5691E159-2D9B-407F-971F-EA5C592DC524}.debug-noboost-st|Win32.Build.0 = debug-noboost-st|Win32
+		{5691E159-2D9B-407F-971F-EA5C592DC524}.debug-st|Win32.ActiveCfg = debug-st|Win32
+		{5691E159-2D9B-407F-971F-EA5C592DC524}.debug-st|Win32.Build.0 = debug-st|Win32
+		{5691E159-2D9B-407F-971F-EA5C592DC524}.Release|Win32.ActiveCfg = release|Win32
+		{5691E159-2D9B-407F-971F-EA5C592DC524}.Release|Win32.Build.0 = release|Win32
+		{5691E159-2D9B-407F-971F-EA5C592DC524}.release-dll|Win32.ActiveCfg = release-dll|Win32
+		{5691E159-2D9B-407F-971F-EA5C592DC524}.release-dll|Win32.Build.0 = release-dll|Win32
+		{5691E159-2D9B-407F-971F-EA5C592DC524}.release-noboost-st|Win32.ActiveCfg = release-noboost-st|Win32
+		{5691E159-2D9B-407F-971F-EA5C592DC524}.release-noboost-st|Win32.Build.0 = release-noboost-st|Win32
+		{5691E159-2D9B-407F-971F-EA5C592DC524}.release-st|Win32.ActiveCfg = release-st|Win32
+		{5691E159-2D9B-407F-971F-EA5C592DC524}.release-st|Win32.Build.0 = release-st|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
