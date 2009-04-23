@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8.00"
+	Version="9.00"
 	Name="MeshMixer"
 	ProjectGUID="{1DA068D1-0E76-4343-A1FD-9C57844AFAF0}"
 	RootNamespace="MeshMixer"
 	Keyword="Win32Proj"
+	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
 		<Platform
@@ -20,7 +21,7 @@
 			OutputDirectory="$(SolutionDir)\bin\win32\$(ConfigurationName)"
 			IntermediateDirectory="$(SolutionDir)\bin\win32\$(ConfigurationName)"
 			ConfigurationType="1"
-			CharacterSet="1"
+			CharacterSet="2"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -40,14 +41,17 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;C:\projects\libraries\STLport-5.2.1\stlport&quot;;C:\projects\libraries\boost_1_37_0;C:\projects\libraries\assimp\include;&quot;C:\projects\libraries\wxWidgets-2.8.9\include&quot;;&quot;C:\projects\libraries\wxWidgets-2.8.9\contrib\include&quot;;&quot;C:\projects\libraries\wxWidgets-2.8.9\lib\vc_dll\mswud&quot;;C:\projects\libraries\ogre\OgreMain\include;.\include"
-				PreprocessorDefinitions="WIN32;_DEBUG;_STLP_DEBUG=1;_WINDOWS;__WINDOWS__;__WXMSW__;__WXDEBUG__;WXDEBUG=1;WXUSINGDLL"
+				FavorSizeOrSpeed="0"
+				AdditionalIncludeDirectories="&quot;..\libraries\STLport-5.2.1\stlport&quot;;..\libraries\boost\boost_1_38;..\libraries\assimp\include;&quot;..\libraries\wxWidgets-2.8.10\include&quot;;&quot;..\libraries\wxWidgets-2.8.10\contrib\include&quot;;&quot;..\libraries\wxWidgets-2.8.10\lib\vc_dll\mswd&quot;;..\libraries\ogre\OgreMain\include;.\include"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;__WINDOWS__;__WXMSW__;__WXDEBUG__;WXDEBUG=1;WXUSINGDLL;_STPL_DEBUG=1"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
+				SmallerTypeCheck="true"
 				RuntimeLibrary="3"
+				FloatingPointModel="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
-				Detect64BitPortabilityProblems="true"
+				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="4"
 			/>
 			<Tool
@@ -63,9 +67,11 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="OgreMain_d.lib assimp.lib wxmsw28ud_adv.lib wxmsw28ud_media.lib wxmsw28ud_aui.lib wxmsw28ud_core.lib wxbase28ud.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;C:\projects\libraries\STLport-5.2.1\lib&quot;;&quot;C:\projects\libraries\wxWidgets-2.8.9\lib\vc_dll&quot;;&quot;C:\projects\libraries\assimp\lib\assimp_debug-dll_win32&quot;;C:\projects\libraries\ogre\lib"
+				AdditionalLibraryDirectories="&quot;..\libraries\STLport-5.2.1\lib&quot;;&quot;..\libraries\wxWidgets-2.8.10\lib\vc_dll&quot;;&quot;..\libraries\assimp\lib\assimp_debug-dll_win32&quot;;..\libraries\ogre\lib"
 				GenerateDebugInformation="true"
 				SubSystem="2"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -85,9 +91,6 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -141,6 +144,8 @@
 				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -160,9 +165,6 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -202,6 +204,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\ScenePanel.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\wxOgre.cpp"
 				>
 			</File>
@@ -237,6 +243,10 @@
 			</File>
 			<File
 				RelativePath=".\include\OptionsPanel.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\ScenePanel.h"
 				>
 			</File>
 			<File

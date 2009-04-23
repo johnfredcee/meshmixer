@@ -14,6 +14,8 @@ class wxNotebook;
 class wxPropertyGridManager;
 class wxTreeCtrl;
 
+struct aiScene;
+
 namespace Ogre
 {
     class Entity;
@@ -26,12 +28,12 @@ class DocPanel;
 class EventArgs;
 class LogPanel;
 class OptionsPanel;
+class ScenePanel;
 class PropertiesPanel;
 class ResourcePanel;
 class WorkspacePanel;
 class wxOgre;
 class MeshMaker;
-
 class MeshMixerApp;
 
 class MeshMixerFrame: public wxFrame
@@ -70,6 +72,7 @@ class MeshMixerFrame: public wxFrame
         LogPanel *mLogPanel;
         LogPanel *mImportLogPanel;
         OptionsPanel* mOptionsPanel;
+		ScenePanel *mScenePanel;	
 
         wxAuiManager *mAuiManager;
         
@@ -79,6 +82,7 @@ class MeshMixerFrame: public wxFrame
         Ogre::Entity* mEntity;
         Ogre::SceneNode *mMeshNode;
         MeshMaker *mMeshMaker;
+		const aiScene *mScene;
 
 #ifndef __unix__
         Ogre::RenderSystem* mDirectXRenderSystem;

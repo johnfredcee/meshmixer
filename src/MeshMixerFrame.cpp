@@ -39,6 +39,7 @@
 #include "MeshMaker.h"
 #include "LogPanel.h"
 #include "OptionsPanel.h"
+#include "ScenePanel.h"
 #include "wxOgre.h"
 
 
@@ -77,6 +78,7 @@ wxFrame(parent, id, title, pos, size, wxDEFAULT_FRAME_STYLE)
     mRoot = NULL;
     mMeshNode = NULL;
 	mEntity = NULL;	
+	mScene = NULL;
     mMeshMaker = new MeshMaker();
     
     createAuiManager();
@@ -306,6 +308,9 @@ void MeshMixerFrame::createOptionsPane()
     mOptionsPanel = new OptionsPanel(mOptionsNotebook);
     mOptionsNotebook->AddPage(mOptionsPanel, wxT("Post Process Options"));
 
+	mScenePanel = new ScenePanel(mOptionsNotebook);
+	mOptionsNotebook->AddPage(mScenePanel, wxT("Scene Structure"));
+
     wxAuiPaneInfo info;         
     info.Caption(wxT("Options"));
     info.MaximizeButton(true);
@@ -326,52 +331,60 @@ void MeshMixerFrame::OnFileNew(wxCommandEvent& event)
 
 void MeshMixerFrame::OnFileOpen(wxCommandEvent& event)
 {
-    wxFileDialog fd(this, wxT("Open An Asset"));
-    if (fd.ShowModal() == wxID_OK)
+    wxFileDialog *fd = new wxFileDialog(this, wxT("Open An Asset"));
+    if (fd->ShowModal() == wxID_OK)
     {
 
-        std::string meshPath(fd.GetPath().mb_str(wxConvUTF8));
-        wxFileName fn(fd.GetPath());
-        std::string meshName(fn.GetName().mb_str(wxConvUTF8));
-		std::string meshDir(fn.GetPath().mb_str(wxConvUTF8));
+		delete mScene;
+		mScene = NULL;
 
-        Assimp::Importer importer;
-        const aiScene* scene = importer.ReadFile( meshPath,  mOptionsPanel->getOptions());
+		//_CrtCheckMemory();
+		//std::string meshPath((const char *)fd->GetPath().fn_str());
+        //wxFileName fn(fd->GetPath());
+		//_CrtCheckMemory();
+        //std::string meshName((const char *)fn.GetName().fn_str());
+		//std::string meshDir((const char *) fn.GetPath().fn_str());
+		//_CrtSetDbgFlag(_CRTDBG_CHECK_ALWAYS_DF);	
+		Assimp::Importer* importer = new Assimp::Importer;
+		mScene = importer->ReadFile( "G:\\projects\\art\\Models\\Free-game-models-collection\\buildings\\barrack.3DS",  mOptionsPanel->getOptions());
 
-        if (!scene)
+        if (!mScene)
         {
-            mImportLogPanel->messageLogged( importer.GetErrorString().c_str() );
+            mImportLogPanel->messageLogged( importer->GetErrorString().c_str() );
 
         } else {
 
-            mImportLogPanel->messageLogged(( boost::format("Read file %s ") % fd.GetPath().c_str() ).str() );
-            mImportLogPanel->messageLogged(( boost::format("Animations %d ") % scene->mNumAnimations).str() );
-            mImportLogPanel->messageLogged(( boost::format("Materials %d ") % scene->mNumMaterials).str() );
-            mImportLogPanel->messageLogged(( boost::format("Meshes %d ") %  scene->mNumMeshes).str() );
-            mImportLogPanel->messageLogged(( boost::format("Textures %d ") % scene->mNumTextures).str() );
-          
-            if (mMeshNode == NULL)
-            {
-                Ogre::SceneManager *sceneMgr = wxOgre::getSingleton().getSceneManager();    
-                Ogre::SceneNode *rootNode = sceneMgr->getRootSceneNode();
-                mMeshNode = rootNode->createChildSceneNode();
-			}  else {
-				mOgreControl->resetCamera();
-			}
+            mImportLogPanel->messageLogged(( boost::format("Read file %s ") % fd->GetPath().c_str() ).str() );
+            mImportLogPanel->messageLogged(( boost::format("Animations %d ") % mScene->mNumAnimations).str() );
+            mImportLogPanel->messageLogged(( boost::format("Materials %d ") % mScene->mNumMaterials).str() );
+            mImportLogPanel->messageLogged(( boost::format("Meshes %d ") %  mScene->mNumMeshes).str() );
+            mImportLogPanel->messageLogged(( boost::format("Textures %d ") % mScene->mNumTextures).str() );
+			//mScenePanel->SetScene(mScene);
 
-			mMeshMaker->setDirectory(meshDir);            
-            mMeshMaker->setName(meshName);
-            mMeshMaker->createMesh();
-            for(size_t i = 0; i < scene->mNumMeshes; i++)
-            {
-                mMeshMaker->createSubMesh( i, scene->mMeshes[i], scene->mMaterials );
-            }
-            Ogre::MeshPtr mesh = mMeshMaker->finishMesh();
-            mEntity = wxOgre::getSingleton().getSceneManager()->createEntity("Mesh", mesh->getName());	   
-            mMeshNode->attachObject(mEntity);
+   //         if (mMeshNode == NULL)
+   //         {
+   //             Ogre::SceneManager *sceneMgr = wxOgre::getSingleton().getSceneManager();    
+   //             Ogre::SceneNode *rootNode = sceneMgr->getRootSceneNode();
+			// TODO :: Move mesh node to scene construction
+   //             mMeshNode = rootNode->createChildSceneNode();
+			//}  else {
+			//	mOgreControl->resetCamera();
+			//}
+
+			//mMeshMaker->setDirectory(meshDir);            
+   //         mMeshMaker->setName(meshName);
+   //         mMeshMaker->createMesh();
+   //         for(size_t i = 0; i < scene->mNumMeshes; i++)
+   //         {
+   //             mMeshMaker->createSubMesh( i, scene->mMeshes[i], scene->mMaterials );
+   //         }
+   //         Ogre::MeshPtr mesh = mMeshMaker->finishMesh();
+   //         mEntity = wxOgre::getSingleton().getSceneManager()->createEntity("Mesh", mesh->getName());	   
+   //         mMeshNode->attachObject(mEntity);
         }
-
+		delete importer;
     };
+	delete fd;
     
 }
 

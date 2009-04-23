@@ -16,6 +16,10 @@ using Ogre::ConfigFile;
 using Ogre::LogManager;
 using Ogre::ResourceGroupManager;
 
+// TODO: Recursive scene import
+// TODO: Tree window that lets us view the scene
+// TODO: Right click on window to view/export
+
 MeshMixerApp::~MeshMixerApp()
 {
 }
@@ -23,6 +27,12 @@ MeshMixerApp::~MeshMixerApp()
 bool MeshMixerApp::OnInit()
 {
 	wxInitAllImageHandlers();
+
+#ifdef WIN32
+	 HANDLE heapHnd = GetProcessHeap();
+	 BOOL ok = HeapSetInformation(heapHnd, HeapEnableTerminationOnCorruption, NULL, 0);
+	 assert(ok != 0);
+#endif
 
 #ifdef SHOW_SPLASH_SCREEN
 	wxBitmap bitmap;

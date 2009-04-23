@@ -36,6 +36,7 @@ mSceneMgr(NULL)
 
 MeshMaker::~MeshMaker()
 {
+
 }
 
 Ogre::MaterialPtr MeshMaker::createMaterial(int index, aiMaterial* mat)
