@@ -52,26 +52,27 @@ void wxOgre::createOgreRenderWindow()
 	Ogre::String handle;
 #ifdef __WXMSW__
 	handle = Ogre::StringConverter::toString((size_t)((HWND)GetHandle()));
+	params["externalWindowHandle"] = handle;
+
 #elif defined(__WXGTK__)
 	SetBackgroundStyle(wxBG_STYLE_CUSTOM);
 
-	GtkWidget* privHandle = m_wxwindow;
+	GtkWidget* privHandle = GetHandle();
     
 	// prevents flickering
 	gtk_widget_set_double_buffered(privHandle, FALSE);
 
 
     // this doesn't work w. Ogre 1.6.1 maybe this will fix it?
-    //gtk_widget_realize(privHandle);
-    
-
+    gtk_widget_realize(privHandle);
+   
 	// grab the window object
-	GdkWindow* gdkWin = GTK_PIZZA(privHandle)->bin_window;
+	GdkWindow* gdkWin = GDK_PIZZA(privHandle)->bin_window;
 	Display* display = GDK_WINDOW_XDISPLAY(gdkWin);
 	Window wid = GDK_WINDOW_XWINDOW(gdkWin);
 
+    XSync(display,wid);
 
-    //XSync(display,wid);
 
 	std::stringstream str;
 
@@ -98,7 +99,6 @@ void wxOgre::createOgreRenderWindow()
 #error Not supported on this platform.
 #endif
 
-	params["externalWindowHandle"] = handle;
 
 	// Get wx control window size
 	int width;

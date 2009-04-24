@@ -46,11 +46,7 @@ bool MeshMixerApp::OnInit()
     MeshMixerFrame* mainFrame = new MeshMixerFrame(NULL, wxID_ANY, wxT("Mesh Mixer"), wxDefaultPosition,  wxSize(800, 600));
     SetTopWindow(mainFrame);
     mainFrame->Show();    
-#ifdef __unix__
-	// when using gtk we want to delay the first render event until the window is shown
-	// because that is when a gtk window is created
     mainFrame->createOgreRenderWindow();
-#endif
     mainFrame->updateOgre();
 	return true;
 }

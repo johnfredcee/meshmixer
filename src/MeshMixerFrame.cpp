@@ -222,9 +222,6 @@ bool MeshMixerFrame::createOgrePane()
     }
 
     mOgreControl = new wxOgre(this);
-#ifndef __unix__
-	createOgreRenderWindow();
-#endif
     ConfigFile cf;
     cf.load("resources.cfg");
 
@@ -244,9 +241,6 @@ bool MeshMixerFrame::createOgrePane()
         }
     }
 
-    Ogre::ResourceGroupManager::getSingleton().createResourceGroup("Converted");
-    Ogre::ResourceGroupManager::getSingleton().addResourceLocation( "../../../converted" , "FileSystem" , "Converted");
-    Ogre::ResourceGroupManager::getSingleton().initialiseAllResourceGroups();
 
     wxString caption;
     String rs = mRoot->getRenderSystem()->getName();
@@ -262,6 +256,11 @@ bool MeshMixerFrame::createOgrePane()
 void MeshMixerFrame::createOgreRenderWindow()
 {
     mOgreControl->createOgreRenderWindow();
+
+    Ogre::ResourceGroupManager::getSingleton().createResourceGroup("Converted");
+    Ogre::ResourceGroupManager::getSingleton().addResourceLocation( "../../../converted" , "FileSystem" , "Converted");
+    Ogre::ResourceGroupManager::getSingleton().initialiseAllResourceGroups();
+
     mOgreControl->toggleTimerRendering();
 
 }
