@@ -28,12 +28,16 @@ ScenePanel::~ScenePanel()
 {
 }
 
-bool ScenePanel::AddChildren(aiNode* node, wxTreeItemId treeItem)
+bool ScenePanel::AddChildren(aiNode* node, wxTreeItemId treeItem, bool root)
 {
-	for(int i = node->mNumChildren - 1; i > 0; i--)
+	wxTreeItemId item = treeItem;
+	if (!root)
+	{
+		item = mSceneTree->AppendItem(treeItem, wxString(&node->mName.data[0]), -1, -1, new SceneTreeItemData(node));
+	}
+	for(int i = node->mNumChildren - 1; i >= 0; i--)
 	{
 		aiNode *child = node->mChildren[i];
-		wxTreeItemId item = mSceneTree->AppendItem(treeItem, wxString(&child->mName.data[0], wxConvUTF8), -1, -1, new SceneTreeItemData(child));
 		AddChildren(child, item);
 	}
 	return true;
@@ -44,8 +48,8 @@ bool ScenePanel::SetScene(const aiScene* scene)
 	mSceneTree->Hide();
 	mSceneTree->DeleteAllItems();
 	aiNode* root = scene->mRootNode;
-	wxTreeItemId rootId = mSceneTree->AddRoot(wxString(&root->mName.data[0],wxConvUTF8), -1, -1, new SceneTreeItemData( root ));
-	AddChildren(root, rootId);
+	wxTreeItemId rootId = mSceneTree->AddRoot(wxString(&root->mName.data[0]), -1, -1, new SceneTreeItemData( root ));
+	AddChildren(root, rootId, true);
 	mSceneTree->Show();
 	return true;	
 }

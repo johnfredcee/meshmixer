@@ -338,14 +338,14 @@ void MeshMixerFrame::OnFileOpen(wxCommandEvent& event)
 		mScene = NULL;
 
 		//_CrtCheckMemory();
-		//std::string meshPath((const char *)fd->GetPath().fn_str());
-        //wxFileName fn(fd->GetPath());
+		std::string meshPath(fd->GetPath().fn_str());
+        wxFileName fn(fd->GetPath());
 		//_CrtCheckMemory();
-        //std::string meshName((const char *)fn.GetName().fn_str());
-		//std::string meshDir((const char *) fn.GetPath().fn_str());
+        std::string meshName(fn.GetName().fn_str());
+		std::string meshDir(fn.GetPath().fn_str());
 		//_CrtSetDbgFlag(_CRTDBG_CHECK_ALWAYS_DF);	
 		Assimp::Importer* importer = new Assimp::Importer;
-		mScene = importer->ReadFile( "G:\\projects\\art\\Models\\Free-game-models-collection\\buildings\\barrack.3DS",  mOptionsPanel->getOptions());
+		mScene = importer->ReadFile( meshPath.c_str(),  mOptionsPanel->getOptions());
 
         if (!mScene)
         {
@@ -358,7 +358,7 @@ void MeshMixerFrame::OnFileOpen(wxCommandEvent& event)
             mImportLogPanel->messageLogged(( boost::format("Materials %d ") % mScene->mNumMaterials).str() );
             mImportLogPanel->messageLogged(( boost::format("Meshes %d ") %  mScene->mNumMeshes).str() );
             mImportLogPanel->messageLogged(( boost::format("Textures %d ") % mScene->mNumTextures).str() );
-			//mScenePanel->SetScene(mScene);
+			mScenePanel->SetScene(mScene);
 
    //         if (mMeshNode == NULL)
    //         {

@@ -40,7 +40,7 @@ class ScenePanel : public wxPanel
     bool SetScene(const aiScene*);
  private:
     wxTreeCtrl *mSceneTree;
-	bool AddChildren(aiNode* node, wxTreeItemId treeItem);
+	bool AddChildren(aiNode* node, wxTreeItemId treeItem, bool root = false);
 };
 
 #endif
