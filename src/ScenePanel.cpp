@@ -5,11 +5,18 @@
 #include <wx/sizer.h>
 #include <aiscene.h>
 
+#include "SceneClientData.h"
 #include "ScenePanel.h"
+
+
+wxWindowID SCENE_TREE_ID = wxNewId();
 
 IMPLEMENT_CLASS(ScenePanel, wxPanel);
 
-wxWindowID SCENE_TREE_ID = wxNewId();
+BEGIN_EVENT_TABLE(ScenePanel, wxPanel)
+	EVT_TREE_ITEM_GETTOOLTIP(SCENE_TREE_ID, SceneTooltipSet)
+	EVT_TREE_ITEM_ACTIVATED(SCENE_TREE_ID, SelectedNode)
+END_EVENT_TABLE()
 
 ScenePanel::ScenePanel(wxWindow* parent, wxWindowID id,
 		       const wxPoint& pos, 
@@ -52,4 +59,36 @@ bool ScenePanel::SetScene(const aiScene* scene)
 	AddChildren(root, rootId, true);
 	mSceneTree->Show();
 	return true;	
+}
+
+
+void ScenePanel::SceneTooltipSet(wxTreeEvent& evt)
+{
+	wxTreeItemId item = evt.GetItem();
+	SceneTreeItemData *sceneData = dynamic_cast<SceneTreeItemData*>(mSceneTree->GetItemData(item));
+	if (sceneData != NULL)
+	{		
+		evt.SetToolTip(wxString::Format("%d meshes", sceneData->GetData()->mNumMeshes)); 
+	}
+
+	return;
+	
+}
+
+void ScenePanel::SelectedNode(wxTreeEvent& evt)
+{
+	wxTreeItemId item = evt.GetItem();
+	SceneTreeItemData *sceneData = dynamic_cast<SceneTreeItemData*>(mSceneTree->GetItemData(item));
+	if (sceneData != NULL)
+	{
+		if (sceneData->GetData()->mNumMeshes > 0)
+		{
+			wxCommandEvent sceneEvent(SceneEventType, GetId());
+			SceneClientData* nodeObject = new SceneClientData;
+			nodeObject->meshNode = (sceneData->GetData());
+			sceneEvent.SetClientObject(nodeObject);
+			ProcessEvent(sceneEvent);
+		}
+	}
+	return;
 }

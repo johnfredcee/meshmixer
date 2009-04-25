@@ -205,6 +205,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\SceneClientData.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\ScenePanel.cpp"
 				>
 			</File>
@@ -244,6 +248,10 @@
 			</File>
 			<File
 				RelativePath=".\include\OptionsPanel.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\SceneClientData.h"
 				>
 			</File>
 			<File

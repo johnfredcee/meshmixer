@@ -36,60 +36,63 @@ class wxOgre;
 class MeshMaker;
 class MeshMixerApp;
 
+
 class MeshMixerFrame: public wxFrame
 {
-    public:
+public:
 
-        MeshMixerFrame(wxWindow* parent, int id, const wxString& title, const wxPoint& pos=wxDefaultPosition, const wxSize& size=wxDefaultSize, long style=wxDEFAULT_FRAME_STYLE);
+    MeshMixerFrame(wxWindow* parent, int id, const wxString& title, const wxPoint& pos=wxDefaultPosition, const wxSize& size=wxDefaultSize, long style=wxDEFAULT_FRAME_STYLE);
 
-        friend class MeshMixerApp;
+    friend class MeshMixerApp;
         
-    protected:
-        void createFileMenu();
-        void createViewMenu();        
-        void createMenuBar();        
-        void createAuiManager(void);
-        bool createOgrePane(void);
-        void createInformationPane(void);
-        void createOptionsPane(void);
-        void createOgreRenderWindow(void);
-        void updateOgre(void);
+protected:
+    void createFileMenu();
+    void createViewMenu();        
+    void createMenuBar();        
+    void createAuiManager(void);
+    bool createOgrePane(void);
+    void createInformationPane(void);
+    void createOptionsPane(void);
+    void createOgreRenderWindow(void);
+    void updateOgre(void);
 
-        void OnFileNew(wxCommandEvent& event);
-        void OnFileOpen(wxCommandEvent& event);
-        void OnFileSave(wxCommandEvent& event);
-        void OnFileSaveAs(wxCommandEvent& event);
-        void OnFileClose(wxCommandEvent& event);
-        void OnFileExit(wxCommandEvent& event);
-        void OnViewFreeCamera(wxCommandEvent& event);
-        void OnViewWireframe(wxCommandEvent& event);
+    void OnFileNew(wxCommandEvent& event);
+    void OnFileOpen(wxCommandEvent& event);
+    void OnFileSave(wxCommandEvent& event);
+    void OnFileSaveAs(wxCommandEvent& event);
+    void OnFileClose(wxCommandEvent& event);
+    void OnFileExit(wxCommandEvent& event);
+    void OnViewFreeCamera(wxCommandEvent& event);
+    void OnViewWireframe(wxCommandEvent& event);
+	void OnSceneChange(wxCommandEvent& event);
 
-        wxMenuBar* mMenuBar;
-        wxMenu* mFileMenu;        
-        wxMenu* mViewMenu;        
-        wxAuiNotebook* mInformationNotebook;
-        wxAuiNotebook* mOptionsNotebook;
-        LogPanel *mLogPanel;
-        LogPanel *mImportLogPanel;
-        OptionsPanel* mOptionsPanel;
-		ScenePanel *mScenePanel;	
+    wxMenuBar* mMenuBar;
+    wxMenu* mFileMenu;        
+    wxMenu* mViewMenu;        
+    wxAuiNotebook* mInformationNotebook;
+    wxAuiNotebook* mOptionsNotebook;
+    LogPanel *mLogPanel;
+    LogPanel *mImportLogPanel;
+    OptionsPanel* mOptionsPanel;
+    ScenePanel *mScenePanel;	
 
-        wxAuiManager *mAuiManager;
+    wxAuiManager *mAuiManager;
         
-        wxOgre* mOgreControl;
+    wxOgre* mOgreControl;
         
-        Ogre::Root* mRoot;
-        Ogre::Entity* mEntity;
-        Ogre::SceneNode *mMeshNode;
-        MeshMaker *mMeshMaker;
-		const aiScene *mScene;
+    Ogre::Root* mRoot;
+    Ogre::Entity* mEntity;
+    Ogre::SceneNode *mMeshNode;
+    MeshMaker *mMeshMaker;
+
+    const aiScene *mScene;
 
 #ifndef __unix__
-        Ogre::RenderSystem* mDirectXRenderSystem;
+    Ogre::RenderSystem* mDirectXRenderSystem;
 #endif
-        Ogre::RenderSystem* mOpenGLRenderSystem;
+    Ogre::RenderSystem* mOpenGLRenderSystem;
         
-        DECLARE_EVENT_TABLE();
+    DECLARE_EVENT_TABLE();
         
 };
 

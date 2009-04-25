@@ -12,7 +12,7 @@
 #include <wx/log.h>
 
 #include <wx/filename.h>
-#include <assimp.hpp>
+#include <assimp.h>
 #include <aiScene.h>
 #include <aiMesh.h>
 #include <aiPostProcess.h>
@@ -36,6 +36,8 @@
 
 #include "boost/format.hpp"
 
+
+#include "SceneClientData.h"
 #include "MeshMaker.h"
 #include "LogPanel.h"
 #include "OptionsPanel.h"
@@ -51,6 +53,8 @@ using Ogre::String;
 using Ogre::Vector3;
 using Ogre::ConfigFile;
 
+extern const long ID_MAIN_FRAME;
+
 const long ID_FILE_MENU_NEW = wxNewId();
 const long ID_FILE_MENU_OPEN = wxNewId();
 const long ID_FILE_MENU_SAVE = wxNewId();
@@ -59,6 +63,7 @@ const long ID_FILE_MENU_CLOSE = wxNewId();
 const long ID_FILE_MENU_EXIT = wxNewId();
 const long ID_VIEW_MENU_FREE_CAMERA = wxNewId();
 const long ID_VIEW_MENU_WIREFRAME = wxNewId();
+const long ID_SCENE_PANEL = wxNewId();
 
 BEGIN_EVENT_TABLE(MeshMixerFrame, wxFrame)
     EVT_ACTIVATE(MeshMixerFrame::OnActivate)
@@ -70,6 +75,7 @@ BEGIN_EVENT_TABLE(MeshMixerFrame, wxFrame)
     EVT_MENU (ID_FILE_MENU_EXIT,         MeshMixerFrame::OnFileExit)
     EVT_MENU (ID_VIEW_MENU_FREE_CAMERA,  MeshMixerFrame::OnViewFreeCamera)
     EVT_MENU (ID_VIEW_MENU_WIREFRAME,    MeshMixerFrame::OnViewWireframe)
+	EVT_COMMAND(ID_SCENE_PANEL, SceneEventType, MeshMixerFrame::OnSceneChange)
 END_EVENT_TABLE()
 
 MeshMixerFrame::MeshMixerFrame(wxWindow* parent, int id, const wxString& title, const wxPoint& pos, const wxSize& size, long style):
@@ -77,15 +83,15 @@ wxFrame(parent, id, title, pos, size, wxDEFAULT_FRAME_STYLE)
 {
     mRoot = NULL;
     mMeshNode = NULL;
-	mEntity = NULL;	
-	mScene = NULL;
+    mEntity = NULL;	
+    mScene = NULL;
     mMeshMaker = new MeshMaker();
     
     createAuiManager();
     createMenuBar();
-	if (!createOgrePane()) {
+    if (!createOgrePane()) {
 		throw std::exception();
-	}
+    }
     createOptionsPane();
     createInformationPane();
     mAuiManager->Update();
@@ -250,7 +256,7 @@ bool MeshMixerFrame::createOgrePane()
 
     mAuiManager->AddPane(mOgreControl, wxCENTER, wxT("Ogre Pane"));
 
-	return true;
+    return true;
 }
 
 void MeshMixerFrame::createOgreRenderWindow()
@@ -261,6 +267,10 @@ void MeshMixerFrame::createOgreRenderWindow()
     Ogre::ResourceGroupManager::getSingleton().addResourceLocation( "../../../converted" , "FileSystem" , "Converted");
     Ogre::ResourceGroupManager::getSingleton().initialiseAllResourceGroups();
 
+	Ogre::SceneManager *sceneMgr = wxOgre::getSingleton().getSceneManager();    
+	Ogre::SceneNode *rootNode = sceneMgr->getRootSceneNode();
+	mMeshNode = rootNode->createChildSceneNode();
+	
     mOgreControl->toggleTimerRendering();
 
 }
@@ -307,8 +317,8 @@ void MeshMixerFrame::createOptionsPane()
     mOptionsPanel = new OptionsPanel(mOptionsNotebook);
     mOptionsNotebook->AddPage(mOptionsPanel, wxT("Post Process Options"));
 
-	mScenePanel = new ScenePanel(mOptionsNotebook);
-	mOptionsNotebook->AddPage(mScenePanel, wxT("Scene Structure"));
+    mScenePanel = new ScenePanel(mOptionsNotebook, ID_SCENE_PANEL);
+    mOptionsNotebook->AddPage(mScenePanel, wxT("Scene Structure"));
 
     wxAuiPaneInfo info;         
     info.Caption(wxT("Options"));
@@ -323,8 +333,8 @@ void MeshMixerFrame::createOptionsPane()
 void MeshMixerFrame::OnFileNew(wxCommandEvent& event)
 {
     mOgreControl->resetCamera();
-	mMeshNode->detachAllObjects();
-	mMeshMaker->destroy();
+    mMeshNode->detachAllObjects();
+    mMeshMaker->destroy();
     return;
 }
 
@@ -334,22 +344,23 @@ void MeshMixerFrame::OnFileOpen(wxCommandEvent& event)
     if (fd->ShowModal() == wxID_OK)
     {
 
-		delete mScene;
-		mScene = NULL;
-
 		//_CrtCheckMemory();
 		std::string meshPath(fd->GetPath().fn_str());
         wxFileName fn(fd->GetPath());
 		//_CrtCheckMemory();
         std::string meshName(fn.GetName().fn_str());
 		std::string meshDir(fn.GetPath().fn_str());
-		//_CrtSetDbgFlag(_CRTDBG_CHECK_ALWAYS_DF);	
-		Assimp::Importer* importer = new Assimp::Importer;
-		mScene = importer->ReadFile( meshPath.c_str(),  mOptionsPanel->getOptions());
+		//_CrtSetDbgFlag(_CRTDBG_CHECK_ALWAYS_DF);
+
+		if (mScene != NULL) {
+			aiReleaseImport(mScene);
+			mScene = NULL;
+		}
+		mScene = aiImportFile( meshPath.c_str(),  mOptionsPanel->getOptions());
 
         if (!mScene)
         {
-            mImportLogPanel->messageLogged( importer->GetErrorString().c_str() );
+            mImportLogPanel->messageLogged( aiGetErrorString() );
 
         } else {
 
@@ -360,30 +371,29 @@ void MeshMixerFrame::OnFileOpen(wxCommandEvent& event)
             mImportLogPanel->messageLogged(( boost::format("Textures %d ") % mScene->mNumTextures).str() );
 			mScenePanel->SetScene(mScene);
 
-   //         if (mMeshNode == NULL)
-   //         {
-   //             Ogre::SceneManager *sceneMgr = wxOgre::getSingleton().getSceneManager();    
-   //             Ogre::SceneNode *rootNode = sceneMgr->getRootSceneNode();
+			//         if (mMeshNode == NULL)
+			//         {
+			//             Ogre::SceneManager *sceneMgr = wxOgre::getSingleton().getSceneManager();    
+			//             Ogre::SceneNode *rootNode = sceneMgr->getRootSceneNode();
 			// TODO :: Move mesh node to scene construction
-   //             mMeshNode = rootNode->createChildSceneNode();
+			//             mMeshNode = rootNode->createChildSceneNode();
 			//}  else {
 			//	mOgreControl->resetCamera();
 			//}
 
 			//mMeshMaker->setDirectory(meshDir);            
-   //         mMeshMaker->setName(meshName);
-   //         mMeshMaker->createMesh();
-   //         for(size_t i = 0; i < scene->mNumMeshes; i++)
-   //         {
-   //             mMeshMaker->createSubMesh( i, scene->mMeshes[i], scene->mMaterials );
-   //         }
-   //         Ogre::MeshPtr mesh = mMeshMaker->finishMesh();
-   //         mEntity = wxOgre::getSingleton().getSceneManager()->createEntity("Mesh", mesh->getName());	   
-   //         mMeshNode->attachObject(mEntity);
+			//         mMeshMaker->setName(meshName);
+			//         mMeshMaker->createMesh();
+			//         for(size_t i = 0; i < scene->mNumMeshes; i++)
+			//         {
+			//             mMeshMaker->createSubMesh( i, scene->mMeshes[i], scene->mMaterials );
+			//         }
+			//         Ogre::MeshPtr mesh = mMeshMaker->finishMesh();
+			//         mEntity = wxOgre::getSingleton().getSceneManager()->createEntity("Mesh", mesh->getName());	   
+			//         mMeshNode->attachObject(mEntity);
         }
-		delete importer;
     };
-	delete fd;
+    delete fd;
     
 }
 
@@ -419,13 +429,14 @@ void MeshMixerFrame::OnFileSave(wxCommandEvent& event)
 
 }
 
+
 void MeshMixerFrame::OnFileSaveAs(wxCommandEvent& event)
 {
 }
 
 void MeshMixerFrame::OnFileClose(wxCommandEvent& event)
 {
-   this->Close();
+    this->Close();
 }
 
 void MeshMixerFrame::OnFileExit(wxCommandEvent& event)
@@ -448,4 +459,14 @@ void MeshMixerFrame::OnViewWireframe(wxCommandEvent& event)
 {
     mOgreControl->wireFrame(event.IsChecked());
 
+}
+
+void MeshMixerFrame::OnSceneChange(wxCommandEvent& event)
+{
+	SceneClientData *info = dynamic_cast<SceneClientData*>( event.GetClientObject() );
+	if (info != NULL)
+	{
+		// yay!
+		wxLogDebug("Got em");
+	}
 }

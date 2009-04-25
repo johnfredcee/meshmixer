@@ -41,6 +41,9 @@ class ScenePanel : public wxPanel
  private:
     wxTreeCtrl *mSceneTree;
 	bool AddChildren(aiNode* node, wxTreeItemId treeItem, bool root = false);
+	void SceneTooltipSet(wxTreeEvent& evt);
+	void SelectedNode(wxTreeEvent& evt);
+	DECLARE_EVENT_TABLE();
 };
 
 #endif

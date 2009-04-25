@@ -20,6 +20,8 @@ using Ogre::ResourceGroupManager;
 // TODO: Tree window that lets us view the scene
 // TODO: Right click on window to view/export
 
+const long ID_MAIN_FRAME = wxNewId();
+
 MeshMixerApp::~MeshMixerApp()
 {
 }
