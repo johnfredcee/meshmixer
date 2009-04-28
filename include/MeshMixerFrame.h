@@ -7,6 +7,7 @@
 
 #include "OgreRenderSystem.h"
 #include "OgreRoot.h"
+#include "OgreMesh.h"
 
 class wxAuiManager;
 class wxAuiNotebook;
@@ -83,9 +84,11 @@ protected:
     Ogre::Root* mRoot;
     Ogre::Entity* mEntity;
     Ogre::SceneNode *mMeshNode;
-    MeshMaker *mMeshMaker;
+	Ogre::MeshPtr mMesh;
 
     const aiScene *mScene;
+
+	wxString mWorkingDir;
 
 #ifndef __unix__
     Ogre::RenderSystem* mDirectXRenderSystem;

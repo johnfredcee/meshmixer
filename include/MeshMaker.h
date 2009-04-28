@@ -16,7 +16,7 @@ class MeshMaker
     public:
         MeshMaker();
         ~MeshMaker();
-        bool createMesh();
+		Ogre::MeshPtr createMesh(const aiScene* scene, aiNode *node);
         bool createSubMesh(int index, const aiMesh *sc, aiMaterial **mat);
         void destroy();
         void setName(const std::string& name)	{ mName = name;	}

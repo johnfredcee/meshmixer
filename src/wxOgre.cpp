@@ -187,21 +187,26 @@ void wxOgre::toggleTimerRendering()
 	mTimer.Start(10);
 }
 
-wxOgre::~wxOgre()
+void wxOgre::destroyOgreRenderWindow()
 {
+	mTimer.Stop();
+
 	// destroy Viewport and RenderWindow
 	if (mViewPort)
 	{
 		mRenderWindow->removeViewport(mViewPort->getZOrder());
-		mViewPort = 0;
 	}
 
 	Ogre::Root::getSingleton().detachRenderTarget(mRenderWindow);
-	mRenderWindow = 0;
-
+	mViewPort = NULL;
+	mRenderWindow = NULL;
+	mRoot->shutdown();
     delete mRoot;
+	mRoot = NULL;
+}
 
-
+wxOgre::~wxOgre()
+{
 }
 
 void wxOgre::OnSize(wxSizeEvent& event)

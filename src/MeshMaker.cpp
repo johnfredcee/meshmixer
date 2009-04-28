@@ -18,6 +18,7 @@
 #include <string>
 #include <sstream>
 
+#include <aiScene.h>
 #include <aiMesh.h>
 #include <aiMaterial.h>
 
@@ -65,7 +66,7 @@ Ogre::MaterialPtr MeshMaker::createMaterial(int index, aiMaterial* mat)
 	mLog->logMessage( (boost::format("Creating %s") % matName.c_str()).str() );
 
 
-    Ogre::ResourceManager::ResourceCreateOrRetrieveResult status = omatMgr->createOrRetrieve(matName, "Converted");
+    Ogre::ResourceManager::ResourceCreateOrRetrieveResult status = omatMgr->createOrRetrieve(matName, "Converted", true);
 	Ogre::MaterialPtr omat = status.first;
     if (!status.second)
         return omat;
@@ -104,6 +105,7 @@ Ogre::MaterialPtr MeshMaker::createMaterial(int index, aiMaterial* mat)
         // attempt to load the image
         Ogre::Image image;
 
+		// possibly if we fail to actually find it, pop up a box?
         Ogre::String pathname(path.data);
 		pathname = mDir + "\\" + path.data;
         mLog->logMessage( ( boost::format("Loading image %s") % path.data ).str() );
@@ -285,7 +287,7 @@ bool MeshMaker::createSubMesh(int index, const aiMesh *m, aiMaterial** mats)
 
 }
 
-bool MeshMaker::createMesh()
+Ogre::MeshPtr MeshMaker::createMesh(const aiScene *scene, aiNode* node)
 {
 	wxASSERT(mLog != NULL);
 	std::ostringstream meshname;    
@@ -294,14 +296,18 @@ bool MeshMaker::createMesh()
 	meshname.fill('0');
 	meshname << mCount;
 	mCount++;
-	mName = meshname.str();
+	mName = Ogre::String(node->mName.data);
 
 	wxASSERT(mMesh.isNull());
 	if (mMesh.isNull()) {
 		mMesh = Ogre::MeshManager::getSingleton().createManual(mName + ".mesh","Converted");
 	}
 	mSceneMgr = wxOgre::getSingleton().getSceneManager();
-	return true;
+	for(std::size_t i = 0; i < node->mNumMeshes; i++)
+	{
+		createSubMesh(i, scene->mMeshes[node->mMeshes[i]], scene->HasMaterials() ? scene->mMaterials : NULL);
+	}
+	return finishMesh();
 }
 
 void MeshMaker::destroy()

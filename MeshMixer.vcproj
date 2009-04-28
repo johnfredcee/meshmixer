@@ -44,7 +44,7 @@
 				FavorSizeOrSpeed="0"
 				AdditionalIncludeDirectories="&quot;..\libraries\STLport-5.2.1\stlport&quot;;..\libraries\boost\boost_1_38;..\libraries\assimp\include;..\libraries\ogre\OgreMain\include;&quot;..\libraries\wxWidgets-2.8.10\include&quot;;&quot;..\libraries\wxWidgets-2.8.10\contrib\include&quot;;&quot;..\libraries\wxWidgets-2.8.10\lib\vc_dll\mswd&quot;;.\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;__WINDOWS__;__WXMSW__;__WXDEBUG__;WXDEBUG=1;WXUSINGDLL;_STLP_DEBUG=1"
-				MinimalRebuild="true"
+				MinimalRebuild="false"
 				ExceptionHandling="2"
 				BasicRuntimeChecks="3"
 				SmallerTypeCheck="false"
@@ -67,7 +67,8 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="OgreMain_d.lib assimp.lib wxmsw28d_adv.lib wxmsw28d_media.lib wxmsw28d_aui.lib wxmsw28d_core.lib wxbase28d.lib"
-				LinkIncremental="2"
+				LinkIncremental="1"
+				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="&quot;..\libraries\STLport-5.2.1\lib&quot;;&quot;..\libraries\assimp\lib\assimp_debug-dll_win32&quot;;..\libraries\ogre\lib;&quot;..\libraries\wxWidgets-2.8.10\lib\vc_dll&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -99,10 +100,10 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
+			OutputDirectory="$(SolutionDir)\bin\win32\$(ConfigurationName)"
+			IntermediateDirectory="$(SolutionDir)\bin\win32\$(ConfigurationName)"
 			ConfigurationType="1"
-			CharacterSet="1"
+			CharacterSet="2"
 			WholeProgramOptimization="1"
 			>
 			<Tool
@@ -122,8 +123,16 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS"
+				EnableIntrinsicFunctions="true"
+				FavorSizeOrSpeed="1"
+				OmitFramePointers="true"
+				AdditionalIncludeDirectories="&quot;..\libraries\STLport-5.2.1\stlport&quot;;..\libraries\boost\boost_1_38;..\libraries\assimp\include;..\libraries\ogre\OgreMain\include;&quot;..\libraries\wxWidgets-2.8.10\include&quot;;&quot;..\libraries\wxWidgets-2.8.10\contrib\include&quot;;&quot;..\libraries\wxWidgets-2.8.10\lib\vc_dll\msw&quot;;.\include"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;__WXMSW__;WXUSINGDLL;NOPCH"
 				RuntimeLibrary="2"
+				BufferSecurityCheck="false"
+				EnableFunctionLevelLinking="true"
+				EnableEnhancedInstructionSet="2"
+				FloatingPointModel="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
@@ -140,7 +149,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="OgreMain.lib assimp.lib wxmsw28_core.lib wxbase28.lib wxmsw28_adv.lib wxmsw28_media.lib wxmsw28_aui.lib "
 				LinkIncremental="1"
+				AdditionalLibraryDirectories="&quot;..\libraries\STLport-5.2.1\lib&quot;;&quot;..\libraries\assimp\lib\assimp_release-dll_win32&quot;;..\libraries\ogre\lib;&quot;..\libraries\wxWidgets-2.8.10\lib\vc_dll&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"

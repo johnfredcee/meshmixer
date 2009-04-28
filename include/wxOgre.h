@@ -56,6 +56,8 @@ public Ogre::Singleton<wxOgre>
         such as the Ogre Root, default camera, default scene manager etc */
     void createOgreRenderWindow();
 
+	void destroyOgreRenderWindow();
+
     /** Toggles the rendering timer on/off */
     void toggleTimerRendering();
 

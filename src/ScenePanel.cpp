@@ -40,7 +40,7 @@ bool ScenePanel::AddChildren(aiNode* node, wxTreeItemId treeItem, bool root)
 	wxTreeItemId item = treeItem;
 	if (!root)
 	{
-		item = mSceneTree->AppendItem(treeItem, wxString(&node->mName.data[0]), -1, -1, new SceneTreeItemData(node));
+		item = mSceneTree->AppendItem(treeItem, wxString(&node->mName.data[0],wxConvUTF8), -1, -1, new SceneTreeItemData(node));
 	}
 	for(int i = node->mNumChildren - 1; i >= 0; i--)
 	{
