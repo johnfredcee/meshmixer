@@ -1,4 +1,6 @@
 #include "wxOgre.h"
+#include "OgreLog.h"
+#include "OgreLogManager.h"
 
 #ifdef __WXGTK__
 #include <gdk/gdkx.h>
@@ -144,8 +146,15 @@ void wxOgre::createOgreRenderWindow()
     mZLight->setDiffuseColour(1.0f, 1.0f,1.0f);
     mZLight->setDirection(0.0f, 0.0f, -1.0f); 
 
+}
 
-
+void wxOgre::createOgreRenderResources()
+{
+	//////////////////////////////////////////////////////////////
+	//  Debug Overlay
+	//////////////////////////////////////////////////////////////
+	mDebugPanelOverlay = Ogre::OverlayManager::getSingleton().getByName("CameraInfoPanel");
+	mRoot->addFrameListener(this);
 }
 
 void wxOgre::wireFrame(bool wireframe)
@@ -167,11 +176,29 @@ void wxOgre::resetCamera()
 
 void wxOgre::cameraTrackNode(Ogre::SceneNode* target)
 {
+	static const wxString camCalcPosCaption(wxT("CalcCamPos:X:%08.4f, Y:%08.4f, Z:%08.4f"));
+	static const wxString camRealPosCaption(wxT("CalcCamPos:X:%08.4f, Y:%08.4f, Z:%08.4f"));
+
 	// TODO: Position camera somwehere sensible relative to object
-    mTarget = target;
-	Ogre::Vector3 size( target->_getWorldAABB().getSize() );
-	mCamera->setPosition(target->getPosition() + size * 1.2f);
-	mCamera->lookAt(target->getPosition());
+	if (target)
+	{
+		Ogre::LogManager* logMgr = Ogre::LogManager::getSingletonPtr();
+		Ogre::Log* log(logMgr->getDefaultLog());
+		mTarget = target;
+		Ogre::Vector3 size( target->getAttachedObject(0)->getBoundingBox().getSize() );
+		Ogre::Vector3 camPos(target->getPosition() + size * 1.2f); 
+		setZoomScale(size.length() / 30.0f);
+		mCameraNode->setPosition(camPos);
+		mCamera->lookAt(target->getPosition());
+		mDebugPanelOverlay->show();
+		wxString msg(wxString::Format(camCalcPosCaption, camPos.x, camPos.y, camPos.x));
+		log->logMessage(Ogre::String(msg.mb_str(wxConvUTF8)));
+		Ogre::Vector3 camRealPos(mCamera->getRealPosition());
+		msg = wxString(wxString::Format(camCalcPosCaption, camRealPos.x, camRealPos.y, camRealPos.x));
+		log->logMessage(Ogre::String(msg.mb_str(wxConvUTF8)));
+	} else {
+		resetCamera();
+	}
 
 }
 
@@ -245,8 +272,24 @@ void wxOgre::OnMouseDown(wxMouseEvent& event)
 	event.Skip();
 }
 
+Ogre::Real wxOgre::TrackballProjectToSphere(Ogre::Real r, Ogre::Real x, Ogre::Real y)
+{
+     float d, t, z;
+ 
+	 d = Ogre::Math::Sqrt(x*x + y*y);
+     if (d < r * 0.70710678118654752440f) {    /* Inside sphere */
+		 z = Ogre::Math::Sqrt(r*r - d*d);
+     } else {           /* On hyperbola */
+         t = r / 1.41421356237309504880f;
+         z = t*t / d;
+     }
+     return z;
+}
+
 void wxOgre::OnMouseMotion(wxMouseEvent& event)
 {
+	static float speed = 0.0f;
+
 	if(event.Dragging())
 	{
 		wxPoint pos = event.GetPosition();
@@ -254,9 +297,51 @@ void wxOgre::OnMouseMotion(wxMouseEvent& event)
 
 		if(event.LeftIsDown())
 		{
-            mYaw += Ogre::Degree(-change.x / (event.ShiftDown() ? 20.0 : 2.0));
-            mPitch += Ogre::Degree(-change.y / (event.ShiftDown() ? 20.0 : 2.0));
-            mCamera->setOrientation(  Ogre::Quaternion( mPitch, Ogre::Vector3::UNIT_X ) * Ogre::Quaternion( mYaw,  Ogre::Vector3::UNIT_Z )  );
+			//mYaw += Ogre::Degree(-change.x / (event.ShiftDown() ? 20.0 : 2.0));
+            //mPitch += Ogre::Degree(-change.y / (event.ShiftDown() ? 20.0 : 2.0));
+            //mCameraNode->setOrientation(  Ogre::Quaternion( mPitch, Ogre::Vector3::UNIT_X ) * Ogre::Quaternion( mYaw,  Ogre::Vector3::UNIT_Z )  );
+
+			Ogre::Vector3 objectCentre(mTarget == NULL ? Ogre::Vector3::ZERO : mTarget->getPosition());
+			Ogre::Vector3 cam2Object(mCamera->getRealPosition() - objectCentre);
+			Ogre::Real r = cam2Object.length();
+			Ogre::Radian phi = Ogre::Math::ATan2(cam2Object.x, cam2Object.y);
+			Ogre::Radian theta = Ogre::Math::ACos(cam2Object.z / cam2Object.length());
+			phi = phi + Ogre::Radian((Ogre::Real) change.y * (Ogre::Math::PI / 20.0f));
+			if (phi < Ogre::Radian(0.0f)) phi = phi + Ogre::Radian(Ogre::Math::TWO_PI);
+			if (phi > Ogre::Radian(Ogre::Math::TWO_PI)) phi = phi - Ogre::Radian(Ogre::Math::TWO_PI);
+			theta = theta + Ogre::Radian((Ogre::Real) change.x * (Ogre::Math::PI / 20.0f));
+			if (theta < Ogre::Radian(0.0f)) theta = theta + Ogre::Radian( Ogre::Math::PI );
+			if (theta > Ogre::Radian(Ogre::Math::PI))  theta = theta - Ogre::Radian(Ogre::Math::PI);
+			Ogre::Vector3 newCam2Object( r * Ogre::Math::Cos(phi) * Ogre::Math::Sin(theta),
+				r * Ogre::Math::Sin(phi) * Ogre::Math::Sin(theta),
+				r * Ogre::Math::Cos(theta));
+			mCameraNode->setPosition(objectCentre + newCam2Object.normalisedCopy() * r);
+			mCamera->lookAt(objectCentre);
+
+			//Ogre::Vector3 targetUp(mTarget == NULL ? Ogre::Vector3::UNIT_Y : mTarget->getLocalAxes().GetColumn(1));
+			//Ogre::Quaternion q(Ogre::Radian((Ogre::Real) change.x) * (Ogre::Math::PI / 20.0f), targetUp);
+			//Ogre::Vector3 newCam2Object(q * cam2Object.normalisedCopy());
+			//cam2Object.normalise();
+			//newCam2Object *= cam2Object.length();
+
+			//wxSize sz(this->GetSize());
+			//Ogre::Real w = (Ogre::Real) sz.GetX();
+			//Ogre::Real h = (Ogre::Real) sz.GetY();
+			//Ogre::Real prevX = ((mPrevPos.x/w) - 0.5f) * 2.0f;
+			//Ogre::Real prevY = (((h - mPrevPos.y)/h) - 0.5f) * 2.0f;
+			//Ogre::Vector3 p0(prevX, prevY, TrackballProjectToSphere(0.5f, prevX, prevY));
+			//Ogre::Real x  = ((pos.x/w) - 0.5f) * 2.0f;
+			//Ogre::Real y  = (((h - pos.y)/h) - 0.5f) * 2.0f;
+			//Ogre::Vector3 p1(x, y, TrackballProjectToSphere(0.5f, x, y));			
+			//Ogre::Vector3 a(p0.crossProduct(p1));
+			//Ogre::Vector3 d(p0-p1);
+			//Ogre::Real t = d.length() / 2.0f * 0.5f;
+			//t = Ogre::Math::Clamp(t, -1.0f, 1.0f);
+			//Ogre::Radian alpha = 2.0f * Ogre::Math::ASin(t);
+			//Ogre::Quaternion q(alpha * 20.0f, a.normalisedCopy()); 
+			//mCamera->setPosition(q * mCamera->getPosition());
+			mCamera->lookAt(objectCentre);
+
 
 		}
 		else if(event.MiddleIsDown())
@@ -264,34 +349,15 @@ void wxOgre::OnMouseMotion(wxMouseEvent& event)
 			int left, top, width, height;
 			mCamera->getViewport()->getActualDimensions(left, top, width, height);
 
-			float moveX = ((float)-change.x / (float)width) * mZoomScale * (event.ShiftDown() ? 0.1 : 1.0);
-			float moveY = ((float)change.y / (float)height) * mZoomScale * (event.ShiftDown() ? 0.1 : 1.0);
+			float speed = 1.0f;
+			if (event.ShiftDown())
+				speed = 0.1f;
+			if (event.ControlDown())
+				speed = 10.0f;
+			float moveX = ((float)-change.x / (float)width) * mZoomScale * speed;
+			float moveY = ((float)change.y / (float)height) * mZoomScale * speed;
 
 			mCamera->moveRelative(Ogre::Vector3(moveX, moveY, 0));
-		}
-		else if(event.RightIsDown())
-		{
-			Ogre::Vector3 objectCentre(mTarget->getPosition());
-			Ogre::Real distanceToObject((mCamera->getRealPosition() - mTarget->getPosition()).length());
-			Ogre::Ray ray0(Ogre::Vector3(mPrevPos.x, mPrevPos.y,0.0f), 
-				           Ogre::Vector3(0.0f,0.0f,1.0f));
-			Ogre::Ray ray1(Ogre::Vector3(pos.x, pos.y, 0.0f), 
-				           Ogre::Vector3(0.0f,0.0f,1.0f));
-			Ogre::Sphere trackBallSphere(objectCentre, distanceToObject);
-			std::pair<bool, Ogre::Real> isect0 = Ogre::Math::intersects(ray0, trackBallSphere);
-			Ogre::Vector3 p0 = ray0.getPoint(isect0.second);
-			std::pair<bool, Ogre::Real> isect1 = Ogre::Math::intersects(ray1, trackBallSphere);
-			Ogre::Vector3 p1 = ray1.getPoint(isect1.second);			
-			Ogre::Vector3 v0((p0 - objectCentre) * 1.0f / (p0 - objectCentre).length());
-			Ogre::Vector3 v1((p1 - objectCentre) * 1.0f / (p1 - objectCentre).length());			
-			Ogre::Vector3 a(v0.crossProduct(v1));
-			Ogre::Radian alpha = Ogre::Math::ASin(a.length());
-			if ((v0.dotProduct(v1)) < 0.0f)
-			{
-				alpha += Ogre::Radian(Ogre::Math::HALF_PI);
-			}
-			mCamera->rotate(a,alpha);
-			mCamera->lookAt(objectCentre);
 		}
 
 		mPrevPos = pos;
@@ -300,11 +366,20 @@ void wxOgre::OnMouseMotion(wxMouseEvent& event)
 
 void wxOgre::OnMouseWheel(wxMouseEvent& event)
 {
+	float speed = 1.0f;
+	if (event.ShiftDown())
+		speed = 0.1f;
+	if (event.ControlDown())
+		speed = 10.0f;
+
 	float moveZ = ((float)event.GetWheelRotation() / 120.0) / 100.0;
-	moveZ = moveZ * mZoomScale * (event.ShiftDown() ? 1.0 : 10.0);
+	
+	moveZ = moveZ * mZoomScale * speed;
 
 	mCamera->moveRelative(Ogre::Vector3(0, 0, moveZ));
 }
+
+// -- ogre rendering
 
 void wxOgre::update()
 {
@@ -321,6 +396,19 @@ void wxOgre::update()
        Ogre::Root::getSingletonPtr()->renderOneFrame();
    }
 }
+
+bool wxOgre::frameEnded(const Ogre::FrameEvent& evt)
+{
+	static const wxString camPosCaption(wxT("CamPos:X:%08.4f, Y:%08.4f, Z:%08.4f"));
+	Ogre::OverlayElement* guiCurr  = Ogre::OverlayManager::getSingleton().getOverlayElement("TextAreaOverlayElement");
+	Ogre::Vector3 camPos(mCamera->getRealPosition());
+	wxString camText(wxString::Format(camPosCaption, camPos.x, camPos.y, camPos.z));
+	guiCurr->setCaption(Ogre::String(camText.mb_str(wxConvUTF8)));
+	return true;
+		
+}
+
+// -- singleton
 
 template<> wxOgre* Ogre::Singleton<wxOgre>::ms_Singleton = 0;
 wxOgre& wxOgre::getSingleton()

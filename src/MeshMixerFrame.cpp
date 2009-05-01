@@ -262,11 +262,17 @@ bool MeshMixerFrame::createOgrePane()
 
 void MeshMixerFrame::createOgreRenderWindow()
 {
+
+
     mOgreControl->createOgreRenderWindow();
 
+
     Ogre::ResourceGroupManager::getSingleton().createResourceGroup("Converted");
-    Ogre::ResourceGroupManager::getSingleton().addResourceLocation( "../../../converted" , "FileSystem" , "Converted");
+    Ogre::ResourceGroupManager::getSingleton().addResourceLocation( "./converted" , "FileSystem" , "Converted");
+    Ogre::ResourceGroupManager::getSingleton().addResourceLocation( "./resources" , "FileSystem" , "General");
     Ogre::ResourceGroupManager::getSingleton().initialiseAllResourceGroups();
+
+	mOgreControl->createOgreRenderResources();
 
 	Ogre::SceneManager *sceneMgr = wxOgre::getSingleton().getSceneManager();    
 	Ogre::SceneNode *rootNode = sceneMgr->getRootSceneNode();
@@ -285,7 +291,8 @@ void MeshMixerFrame::createInformationPane()
 
     Ogre::LogManager* logMgr = Ogre::LogManager::getSingletonPtr();
     
-    mInformationNotebook = new wxAuiNotebook(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_NB_TOP | wxAUI_NB_TAB_SPLIT | wxAUI_NB_TAB_MOVE | wxAUI_NB_SCROLL_BUTTONS | wxNO_BORDER);
+    mInformationNotebook = new wxAuiNotebook(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, 
+											 wxAUI_NB_TOP | wxAUI_NB_TAB_SPLIT | wxAUI_NB_TAB_MOVE | wxAUI_NB_SCROLL_BUTTONS | wxNO_BORDER);
 
     mLogPanel = new LogPanel(mInformationNotebook);
     mInformationNotebook->AddPage(mLogPanel, wxT("Ogre Log"));
@@ -362,7 +369,8 @@ void MeshMixerFrame::OnFileOpen(wxCommandEvent& event)
 
 			if (mScenePanel == NULL) {
 				mScenePanel = new ScenePanel(mOptionsNotebook, ID_SCENE_PANEL);		
-				mOptionsNotebook->AddPage(mScenePanel, wxT("File Structure"));
+				wxString title(wxString::Format("File: %s", fn.GetName()));
+				mOptionsNotebook->AddPage(mScenePanel, title);
 			} 				
 						
             mImportLogPanel->messageLogged(( boost::format("Read file %s ") % fd->GetPath().c_str() ).str() );
@@ -371,6 +379,7 @@ void MeshMixerFrame::OnFileOpen(wxCommandEvent& event)
             mImportLogPanel->messageLogged(( boost::format("Meshes %d ") %  mScene->mNumMeshes).str() );
             mImportLogPanel->messageLogged(( boost::format("Textures %d ") % mScene->mNumTextures).str() );
 			mScenePanel->SetScene(mScene);
+			mOptionsNotebook->SetSelection(mOptionsNotebook->GetPageIndex(mScenePanel));
         }
     };
     delete fd;
@@ -456,16 +465,23 @@ void MeshMixerFrame::OnSceneChange(wxCommandEvent& event)
 		MeshMaker maker;
 		maker.setDirectory(std::string(mWorkingDir.fn_str()));
 		maker.setName(std::string(info->meshNode->mName.data));
+
+		// log import
 	    Ogre::LogManager* logMgr = Ogre::LogManager::getSingletonPtr();
 		Ogre::Log* importLog = logMgr->getLog("Import.log");
 	    maker.setLog(importLog);
+
+		// ok, go create mesh
 		mMesh = maker.createMesh(mScene, info->meshNode);
 		if (mEntity != NULL) {
 			mMeshNode->detachObject(mEntity->getName());
 			wxOgre::getSingleton().getSceneManager()->destroyEntity(mEntity);
 			mEntity = NULL;
 		}
+
+		// attach and view
 		mEntity = wxOgre::getSingleton().getSceneManager()->createEntity(Ogre::String(mMesh->getName()) + Ogre::String("Mesh"), mMesh->getName());	 
 		mMeshNode->attachObject(mEntity);
+		mOgreControl->cameraTrackNode(mMeshNode);
 	}
 }

@@ -18,10 +18,11 @@
 */
 class wxOgre :
 public wxControl,
+public Ogre::FrameListener,
 public Ogre::Singleton<wxOgre>
 {
     DECLARE_CLASS(wxOgre)
-    public:
+public:
     /** A new wxOgre must receive a parent frame to which to attach
         itself to */
     wxOgre (wxFrame* parent);
@@ -55,6 +56,7 @@ public Ogre::Singleton<wxOgre>
     /** Creates an ogre rendering window and all other default objects
         such as the Ogre Root, default camera, default scene manager etc */
     void createOgreRenderWindow();
+	void createOgreRenderResources();
 
 	void destroyOgreRenderWindow();
 
@@ -66,6 +68,9 @@ public Ogre::Singleton<wxOgre>
 
     /* set the camera to track this node */
     void cameraTrackNode(Ogre::SceneNode* target = NULL);
+
+	Ogre::Real TrackballProjectToSphere(Ogre::Real r, Ogre::Real x, Ogre::Real y);
+
 
 protected:
     DECLARE_EVENT_TABLE()
@@ -80,6 +85,9 @@ protected:
     void OnMouseDown(wxMouseEvent& event);
     void OnMouseMotion(wxMouseEvent& event);
     void OnMouseWheel(wxMouseEvent& event);
+
+    /** Ogre Callbacks */
+	virtual bool frameEnded(const Ogre::FrameEvent& evt);
 
     /** Rendering timer */
     wxTimer mTimer;
@@ -97,6 +105,7 @@ protected:
     Ogre::Light* mYLight;
     Ogre::Light* mZLight;
     Ogre::SceneNode* mTarget;
+	Ogre::Overlay*   mDebugPanelOverlay;
 
     // used for tracking spherical cam
     float mRadius;

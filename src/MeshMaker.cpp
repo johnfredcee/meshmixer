@@ -287,6 +287,18 @@ bool MeshMaker::createSubMesh(int index, const aiMesh *m, aiMaterial** mats)
 
 }
 
+Ogre::MeshPtr MeshMaker::finishMesh()
+{
+	// We must indicate the bounding box
+	mMesh->_setBounds(mAAB);  
+	mMesh->_setBoundingSphereRadius((mAAB.getMaximum()- mAAB.getMinimum()).length()/2.0);  
+
+	// And we load the mesh
+	mMesh->load();
+
+	return mMesh;
+}
+
 Ogre::MeshPtr MeshMaker::createMesh(const aiScene *scene, aiNode* node)
 {
 	wxASSERT(mLog != NULL);
@@ -316,15 +328,4 @@ void MeshMaker::destroy()
 	mMesh.setNull(); 
 }
 
-Ogre::MeshPtr MeshMaker::finishMesh()
-{
-	// We must indicate the bounding box
-	mMesh->_setBounds(mAAB);  
-	mMesh->_setBoundingSphereRadius((mAAB.getMaximum()- mAAB.getMinimum()).length()/2.0);  
-
-	// And we load the mesh
-	mMesh->load();
-
-	return mMesh;
-}
 
