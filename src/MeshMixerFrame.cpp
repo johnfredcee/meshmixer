@@ -10,8 +10,9 @@
 #include <wx/aui/auibook.h>
 #include <wx/aui/framemanager.h>
 #include <wx/log.h>
-
+#include <wx/dir.h>
 #include <wx/filename.h>
+
 #include <assimp.h>
 #include <aiScene.h>
 #include <aiMesh.h>
@@ -84,6 +85,7 @@ wxFrame(parent, id, title, pos, size, wxDEFAULT_FRAME_STYLE)
     mMeshNode = NULL;
     mEntity = NULL;	
     mScene = NULL;
+	mScenePanel = NULL;
     mMesh.setNull();
 
     createAuiManager();
@@ -313,10 +315,6 @@ void MeshMixerFrame::createOptionsPane()
     mOptionsPanel = new OptionsPanel(mOptionsNotebook);
     mOptionsNotebook->AddPage(mOptionsPanel, wxT("Post Process Options"));
 
-	// Scene structure is for ogre scene 
-	// TODO: file structure panel per file
-    mScenePanel = new ScenePanel(mOptionsNotebook, ID_SCENE_PANEL);
-    mOptionsNotebook->AddPage(mScenePanel, wxT("Scene Structure"));
 
     wxAuiPaneInfo info;         
     info.Caption(wxT("Options"));
@@ -330,6 +328,9 @@ void MeshMixerFrame::createOptionsPane()
 
 void MeshMixerFrame::OnFileNew(wxCommandEvent& event)
 {
+	if (mScenePanel != NULL)
+		mOptionsNotebook->DeletePage(mOptionsNotebook->GetPageIndex(mScenePanel));
+	mScenePanel = NULL;
     mOgreControl->resetCamera();
     mMeshNode->detachAllObjects();
     return;
@@ -337,6 +338,7 @@ void MeshMixerFrame::OnFileNew(wxCommandEvent& event)
 
 void MeshMixerFrame::OnFileOpen(wxCommandEvent& event)
 {
+	
     wxFileDialog *fd = new wxFileDialog(this, wxT("Open An Asset"));
     if (fd->ShowModal() == wxID_OK)
     {
@@ -358,6 +360,11 @@ void MeshMixerFrame::OnFileOpen(wxCommandEvent& event)
 
         } else {
 
+			if (mScenePanel == NULL) {
+				mScenePanel = new ScenePanel(mOptionsNotebook, ID_SCENE_PANEL);		
+				mOptionsNotebook->AddPage(mScenePanel, wxT("File Structure"));
+			} 				
+						
             mImportLogPanel->messageLogged(( boost::format("Read file %s ") % fd->GetPath().c_str() ).str() );
             mImportLogPanel->messageLogged(( boost::format("Animations %d ") % mScene->mNumAnimations).str() );
             mImportLogPanel->messageLogged(( boost::format("Materials %d ") % mScene->mNumMaterials).str() );
@@ -375,10 +382,13 @@ void MeshMixerFrame::OnFileSave(wxCommandEvent& event)
     wxFileDialog *fdlg = new wxFileDialog(this, wxT("Save a mesh"), wxEmptyString, wxEmptyString,
                                           wxT("Ogre Mesh File|*.mesh|Any File|*.*"), wxOVERWRITE_PROMPT | wxFD_SAVE);
 
+	std::vector<Ogre::String> exportedNames;
+
     if (fdlg->ShowModal() == wxID_OK)
     {
         Ogre::String fname(std::string(fdlg->GetPath().mb_str(wxConvUTF8)));
         wxFileName fn(fdlg->GetPath());
+		wxDir fdir(fn.GetPath());
         if (!mMesh.isNull())
         {
             // serialise the materials
@@ -387,13 +397,21 @@ void MeshMixerFrame::OnFileSave(wxCommandEvent& event)
             {
                 Ogre::SubMesh* sm = it.getNext();
                 Ogre::String matName(sm->getMaterialName());
-                Ogre::MaterialManager *mmptr = Ogre::MaterialManager::getSingletonPtr();
-                Ogre::MaterialPtr materialPtr = mmptr->getByName(matName);
-                Ogre::MaterialSerializer ms;
-                ms.exportMaterial(materialPtr, matName + ".material", true);
+				if (std::find(exportedNames.begin(), exportedNames.end(), matName) == exportedNames.end())
+				{
+					Ogre::MaterialManager *mmptr = Ogre::MaterialManager::getSingletonPtr();
+					Ogre::MaterialPtr materialPtr = mmptr->getByName(matName);
+					Ogre::MaterialSerializer ms;
+					Ogre::String matPath(Ogre::String(fdir.GetName().fn_str()));
+					matPath = matPath + Ogre::String("\\");
+					matPath = matPath + matName;
+					matPath = matPath + Ogre::String(".material");
+					ms.exportMaterial(materialPtr, matPath, true);
+					exportedNames.push_back(matName);
+				}
             }
             Ogre::MeshSerializer *meshSerializer = new Ogre::MeshSerializer();
-            meshSerializer->exportMesh(mMesh.getPointer(), Ogre::String(fn.GetFullPath().mb_str(wxConvUTF8)),  Ogre::Serializer::ENDIAN_NATIVE);
+            meshSerializer->exportMesh(mMesh.getPointer(), Ogre::String(fn.GetFullPath().fn_str()),  Ogre::Serializer::ENDIAN_NATIVE);
         }
 
     }
@@ -427,7 +445,6 @@ void MeshMixerFrame::OnViewFreeCamera(wxCommandEvent& event)
 void MeshMixerFrame::OnViewWireframe(wxCommandEvent& event)
 {
     mOgreControl->wireFrame(event.IsChecked());
-
 }
 
 void MeshMixerFrame::OnSceneChange(wxCommandEvent& event)

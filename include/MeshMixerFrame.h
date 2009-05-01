@@ -42,7 +42,10 @@ class MeshMixerFrame: public wxFrame
 {
 public:
 
-    MeshMixerFrame(wxWindow* parent, int id, const wxString& title, const wxPoint& pos=wxDefaultPosition, const wxSize& size=wxDefaultSize, long style=wxDEFAULT_FRAME_STYLE);
+    MeshMixerFrame(wxWindow* parent, int id, const wxString& title,
+				   const wxPoint& pos=wxDefaultPosition,
+				   const wxSize& size=wxDefaultSize,
+				   long style=wxDEFAULT_FRAME_STYLE);
 
     friend class MeshMixerApp;
         

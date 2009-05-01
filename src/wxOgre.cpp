@@ -167,16 +167,12 @@ void wxOgre::resetCamera()
 
 void wxOgre::cameraTrackNode(Ogre::SceneNode* target)
 {
+	// TODO: Position camera somwehere sensible relative to object
     mTarget = target;
-    if (target != NULL) {
-        mCamera->setAutoTracking(true, target);
-        Ogre::Vector3 delta(  mCamera->getPosition() - mTarget->getPosition() );
-        mRadius = delta.length();
-        mTheta = acos( delta.z / delta.length() );
-        mRho = atan2(delta.x, delta.y);  
-    }
-    else
-        mCamera->setAutoTracking(false);
+	Ogre::Vector3 size( target->_getWorldAABB().getSize() );
+	mCamera->setPosition(target->getPosition() + size * 1.2f);
+	mCamera->lookAt(target->getPosition());
+
 }
 
 void wxOgre::toggleTimerRendering()
@@ -260,7 +256,7 @@ void wxOgre::OnMouseMotion(wxMouseEvent& event)
 		{
             mYaw += Ogre::Degree(-change.x / (event.ShiftDown() ? 20.0 : 2.0));
             mPitch += Ogre::Degree(-change.y / (event.ShiftDown() ? 20.0 : 2.0));
-            mCameraNode->setOrientation(  Ogre::Quaternion( mPitch, Ogre::Vector3::UNIT_X ) * Ogre::Quaternion( mYaw,  Ogre::Vector3::UNIT_Z )  );
+            mCamera->setOrientation(  Ogre::Quaternion( mPitch, Ogre::Vector3::UNIT_X ) * Ogre::Quaternion( mYaw,  Ogre::Vector3::UNIT_Z )  );
 
 		}
 		else if(event.MiddleIsDown())
@@ -273,11 +269,30 @@ void wxOgre::OnMouseMotion(wxMouseEvent& event)
 
 			mCamera->moveRelative(Ogre::Vector3(moveX, moveY, 0));
 		}
-		//else if(event.RightIsDown())
-		//{
-		//	mLightYawNode->yaw(Ogre::Degree(change.x / (event.ShiftDown() ? 20.0 : 2.0)));
-		//	mLightPitchNode->pitch(Ogre::Degree(change.y /(event.ShiftDown() ? 20.0 : 2.0)));
-		//}
+		else if(event.RightIsDown())
+		{
+			Ogre::Vector3 objectCentre(mTarget->getPosition());
+			Ogre::Real distanceToObject((mCamera->getRealPosition() - mTarget->getPosition()).length());
+			Ogre::Ray ray0(Ogre::Vector3(mPrevPos.x, mPrevPos.y,0.0f), 
+				           Ogre::Vector3(0.0f,0.0f,1.0f));
+			Ogre::Ray ray1(Ogre::Vector3(pos.x, pos.y, 0.0f), 
+				           Ogre::Vector3(0.0f,0.0f,1.0f));
+			Ogre::Sphere trackBallSphere(objectCentre, distanceToObject);
+			std::pair<bool, Ogre::Real> isect0 = Ogre::Math::intersects(ray0, trackBallSphere);
+			Ogre::Vector3 p0 = ray0.getPoint(isect0.second);
+			std::pair<bool, Ogre::Real> isect1 = Ogre::Math::intersects(ray1, trackBallSphere);
+			Ogre::Vector3 p1 = ray1.getPoint(isect1.second);			
+			Ogre::Vector3 v0((p0 - objectCentre) * 1.0f / (p0 - objectCentre).length());
+			Ogre::Vector3 v1((p1 - objectCentre) * 1.0f / (p1 - objectCentre).length());			
+			Ogre::Vector3 a(v0.crossProduct(v1));
+			Ogre::Radian alpha = Ogre::Math::ASin(a.length());
+			if ((v0.dotProduct(v1)) < 0.0f)
+			{
+				alpha += Ogre::Radian(Ogre::Math::HALF_PI);
+			}
+			mCamera->rotate(a,alpha);
+			mCamera->lookAt(objectCentre);
+		}
 
 		mPrevPos = pos;
 	}
