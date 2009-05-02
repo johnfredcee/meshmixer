@@ -431,6 +431,9 @@ void MeshMixerFrame::OnFileSave(wxCommandEvent& event)
 
 void MeshMixerFrame::OnFileClose(wxCommandEvent& event)
 {
+	mMeshNode->detachAllObjects();
+	//if (mEntity) { delete mEntity; mEntity = NULL; }
+	//if (!mMesh.isNull()) { mMesh.setNull(); };
 	wxOgre::getSingleton().destroyOgreRenderWindow();
     this->Close();
 }
