@@ -291,19 +291,25 @@ void wxOgre::OnMouseMotion(wxMouseEvent& event)
 	static float speed = 0.0f;
 	static bool dragStart = true;
 	static wxOgre::ArcBall ball(0,0);
+	static const wxString posInfo(wxT("Pos:X:%03d, Y:%03d Change X:%03d Y:%03d"));
 
+	//Ogre::LogManager* logMgr = Ogre::LogManager::getSingletonPtr();
+	//Ogre::Log* log(logMgr->getDefaultLog());
 	int left, top, width, height;	
 	mCamera->getViewport()->getActualDimensions(left, top, width, height);
 
 	wxPoint pos = event.GetPosition();
 	wxPoint change = pos - mPrevPos;
 
-	if ((!event.LeftIsDown()) || ((change.x == 0) && (change.y == 0)))
+	if ((!dragStart) && ((!event.Dragging()) || (!event.LeftIsDown()))) {
+			//wxString msg(wxT("Drag End"));
+			//log->logMessage(Ogre::String(msg.mb_str(wxConvUTF8)));
 			dragStart = true;
+	}
 
 	if(event.Dragging())
 	{
-		if (event.LeftIsDown()  && !((change.x == 0) && (change.y == 0)))
+		if (event.LeftIsDown())
 		{
 			if (mTarget) {
 				Ogre::Vector3 objectCentre(mTarget == NULL ? Ogre::Vector3::ZERO : mTarget->getPosition());
@@ -311,23 +317,24 @@ void wxOgre::OnMouseMotion(wxMouseEvent& event)
 					Ogre::Vector3 cam2Object(mCameraNode->getPosition() - objectCentre);
 					mBasis =  cam2Object.normalisedCopy();
 					mRadius = cam2Object.length();
-					mDragPos = Ogre::Vector2(width/2.0f, height/2.0f);
+					mDragPos = Ogre::Vector2(pos.x, pos.y);
  					dragStart = false;
 					ball.SetScreen(width, height);
-					ball.StartDrag(mDragPos, Ogre::Quaternion::IDENTITY);
+					ball.StartDrag(mDragPos, mCamera->getDerivedOrientation());
+					//wxString msg(wxT("Drag Start"));
+					//log->logMessage(Ogre::String(msg.mb_str(wxConvUTF8)));
+ 					//msg = wxString(wxString::Format(posInfo, pos.x, pos.y, change.x, change.y));
+					//log->logMessage(Ogre::String(msg.mb_str(wxConvUTF8)));
 				} else {
-					mDragPos = mDragPos + Ogre::Vector2( change.x, change.y );
+					mDragPos = Ogre::Vector2( pos.x, pos.y );
 					Ogre::Quaternion rot(ball.Update(mDragPos));
-					mCameraNode->setPosition(objectCentre + rot * ( mBasis * mRadius ));
+					mCameraNode->setPosition(objectCentre + ( rot * mBasis ).normalisedCopy() * mRadius);
  					mCamera->lookAt(objectCentre);
-				}
-			} else {
-				mYaw += Ogre::Degree(-change.x / (event.ShiftDown() ? 0.1f : 0.01f));
-			    mPitch += Ogre::Degree(-change.y / (event.ShiftDown() ? 0.1f : 0.01f));
-				mCameraNode->setOrientation(  Ogre::Quaternion( mPitch, mCameraNode->getOrientation().xAxis() )  * 
-												Ogre::Quaternion( mYaw, mCameraNode->getOrientation().zAxis() ) );
+					//wxString msg(wxString(wxString::Format(posInfo, pos.x, pos.y, change.x, change.y)));
+					//log->logMessage(Ogre::String(msg.mb_str(wxConvUTF8)));
 
-			}
+				}
+			} 
 			//Ogre::Vector3 targetUp(mTarget == NULL ? Ogre::Vector3::UNIT_Y : mTarget->getLocalAxes().GetColumn(1));
 			//Ogre::Quaternion q(Ogre::Radian((Ogre::Real) change.x) * (Ogre::Math::PI / 20.0f), targetUp);
 			//Ogre::Vector3 newCam2Object(q * cam2Object.normalisedCopy());

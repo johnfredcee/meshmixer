@@ -84,10 +84,12 @@ private:
 		Ogre::Vector3 mStartVector;
 		Ogre::Quaternion mStartRotation;
 		Ogre::Real mWidth, mHeight;
+		const float mRadius;
 	public:  
 		ArcBall(int width, int height) : mStartVector(0.0f, 0.0f, 1.0f),
 										 mWidth((Ogre::Real) width),
-										 mHeight((Ogre::Real) height)
+										 mHeight((Ogre::Real) height),
+										 mRadius(300.0f)
 
 		{
 		}
@@ -101,32 +103,36 @@ private:
 		void StartDrag(Ogre::Vector2 startPoint, Ogre::Quaternion rotation)
 		{
 			mStartPoint = startPoint;
-			mStartVector = MapToSphere(startPoint);
+			mStartVector = MapToSphere(startPoint).normalisedCopy();
 			mStartRotation = rotation;
 		}
 
 		Ogre::Quaternion Update(Ogre::Vector2 currentPoint)
 		{
-			Ogre::Vector3 currentVector(MapToSphere(currentPoint));
-			Ogre::Vector3 axis(mStartVector.crossProduct(currentVector));
+			Ogre::Vector3 currentVector(MapToSphere(currentPoint).normalisedCopy());
+			Ogre::Vector3 axis(mStartVector.crossProduct(currentVector).normalisedCopy());
 			Ogre::Radian angle(mStartVector.dotProduct(currentVector));			
-			Ogre::Quaternion delta(axis.x, axis.y, axis.z, -angle.valueRadians());			
+			Ogre::Quaternion delta(axis.x, axis.y, axis.z, angle.valueRadians());			
 			return mStartRotation * delta;
 		}
 
 		Ogre::Vector3 MapToSphere(Ogre::Vector2 point)
 		{
-			Ogre::Real x = point.x / (mWidth / 2.0f);
-			Ogre::Real y = point.y / (mHeight / 2.0f);
+			Ogre::Real x = (point.x - (mWidth / 2.0f)) / mRadius;
+			Ogre::Real y = (point.y - (mHeight / 2.0f)) / mRadius;
+			Ogre::Real z = 0.0f;
 
-			x = x - 1.0f;
-			y = y - 1.0f;
-
-			Ogre::Real z2 = 1.0f - x * x - y * y;
-			Ogre::Real z = z2 > 0.0f ? (Ogre::Real) Ogre::Math::Sqrt(z2) : 0.0f;
-
+			Ogre::Real r = x * x + y * y;
+			if (r > 1.0f)
+			{
+				Ogre::Real s = 1.0f / Ogre::Math::Sqrt(r);
+                x = s * x;
+				y = s * y;
+			} else {
+				z = Ogre::Math::Sqrt(1.0f - r);
+			}
 			Ogre::Vector3 result(x,y,z);
-			return result.normalisedCopy();
+			return result;
 		}
 	};
 
