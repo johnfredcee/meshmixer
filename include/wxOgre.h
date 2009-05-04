@@ -89,7 +89,7 @@ private:
 		ArcBall(int width, int height) : mStartVector(0.0f, 0.0f, 1.0f),
 										 mWidth((Ogre::Real) width),
 										 mHeight((Ogre::Real) height),
-										 mRadius(300.0f)
+										 mRadius(600.0f)
 
 		{
 		}
@@ -112,26 +112,21 @@ private:
 			Ogre::Vector3 currentVector(MapToSphere(currentPoint).normalisedCopy());
 			Ogre::Vector3 axis(mStartVector.crossProduct(currentVector).normalisedCopy());
 			Ogre::Radian angle(mStartVector.dotProduct(currentVector));			
-			Ogre::Quaternion delta(axis.x, axis.y, axis.z, angle.valueRadians());			
-			return mStartRotation * delta;
+			Ogre::Quaternion delta(axis.x, axis.y, axis.z, angle.valueRadians());
+			delta.normalise();
+			return delta * mStartRotation;
 		}
 
+		
 		Ogre::Vector3 MapToSphere(Ogre::Vector2 point)
 		{
-			Ogre::Real x = (point.x - (mWidth / 2.0f)) / mRadius;
-			Ogre::Real y = (point.y - (mHeight / 2.0f)) / mRadius;
-			Ogre::Real z = 0.0f;
-
-			Ogre::Real r = x * x + y * y;
-			if (r > 1.0f)
+			Ogre::Vector3 result((point.x - (mWidth / 2.0f)) / mWidth,   ((mHeight / 2.0f) - point.y) / mHeight, 0.0f);
+			if (result.length() > 1.0f)
 			{
-				Ogre::Real s = 1.0f / Ogre::Math::Sqrt(r);
-                x = s * x;
-				y = s * y;
+				result.normalise();
 			} else {
-				z = Ogre::Math::Sqrt(1.0f - r);
+				result.z = Ogre::Math::Sqrt(1.0f - result.length());
 			}
-			Ogre::Vector3 result(x,y,z);
 			return result;
 		}
 	};
