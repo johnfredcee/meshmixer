@@ -1,0 +1,39 @@
+CameraInfoPanel
+{
+	zorder 500
+
+	container Panel(Container1)
+	{
+		metrics_mode pixels
+		left 0
+		top  0	
+		width 120
+		height 60
+
+		element TextArea(TextAreaOverlayElement)		
+		{
+			metrics_mode pixels
+			left 15
+			top 3
+			width 90
+			height 24
+			font_name BlueHighway
+			char_height 16
+			colour_top 0.5 0.7 0.5		
+			colour_bottom 0.3 0.5 0.3						
+		}				
+
+		element TextArea(TextAreaOverlayElement2)		
+		{
+			metrics_mode pixels
+			left 15
+			top 33
+			width 90
+			height 24
+			font_name BlueHighway
+			char_height 16
+			colour_top 0.5 0.7 0.5		
+			colour_bottom 0.3 0.5 0.3						
+		}				
+	}				
+}
