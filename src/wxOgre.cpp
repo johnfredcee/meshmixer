@@ -337,24 +337,24 @@ void wxOgre::OnMouseMotion(wxMouseEvent& event)
 					mCameraNode->setPosition(objectCentre + ((rot * mDirection) * mRadius));
  					mCamera->lookAt(objectCentre);
 				}
-			//} 
-			}
-	//	else if(event.MiddleIsDown())
-	//	{
-	//		int left, top, width, height;
-	//		mCamera->getViewport()->getActualDimensions(left, top, width, height);
+			} 
+		}
+		else if(event.MiddleIsDown())
+		{
+			int left, top, width, height;
+			mCamera->getViewport()->getActualDimensions(left, top, width, height);
 
-	//		float speed = 1.0f;
-	//		if (event.ShiftDown())
-	//			speed = 0.1f;
-	//		if (event.ControlDown())
-	//			speed = 10.0f;
-	//		float moveX = ((float)-change.x / (float)width) * mZoomScale * speed;
-	//		float moveY = ((float)change.y / (float)height) * mZoomScale * speed;
+			float speed = 1.0f;
+			if (event.ShiftDown())
+				speed = 0.1f;
+			if (event.ControlDown())
+				speed = 10.0f;
+			float moveX = ((float)-change.x / (float)width) * mZoomScale * speed;
+			float moveY = ((float)change.y / (float)height) * mZoomScale * speed;
 
-	//		Ogre::Vector3 delta(mCamera->getRealOrientation().xAxis() * moveX);
-	//		delta += mCamera->getRealOrientation().yAxis() * moveY;
-	//		mCamera->setPosition(mCamera->getRealPosition() + delta);
+			Ogre::Vector3 delta(mCamera->getRealOrientation().xAxis() * moveX);
+			delta += mCamera->getRealOrientation().yAxis() * moveY;
+			mCamera->setPosition(mCamera->getRealPosition() + delta);
 		}
 	}
 	mPrevPos = pos;
