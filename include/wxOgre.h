@@ -77,60 +77,6 @@ protected:
 
 private:
 
-	class ArcBall
-	{
-	private:
-		Ogre::Vector2 mStartPoint;
-		Ogre::Vector3 mStartVector;
-		Ogre::Quaternion mStartRotation;
-		Ogre::Real mWidth, mHeight;
-		const float mRadius;
-	public:  
-		ArcBall(int width, int height) : mStartVector(0.0f, 0.0f, 1.0f),
-										 mWidth((Ogre::Real) width),
-										 mHeight((Ogre::Real) height),
-										 mRadius(600.0f)
-
-		{
-		}
-
-		void SetScreen(int width, int height)
-		{
-			mWidth = (Ogre::Real) width;
-			mHeight =(Ogre::Real) height;			
-		}
-		
-		void StartDrag(Ogre::Vector2 startPoint, Ogre::Quaternion rotation)
-		{
-			mStartPoint = startPoint;
-			mStartVector = MapToSphere(startPoint).normalisedCopy();
-			mStartRotation = rotation;
-		}
-
-		Ogre::Quaternion Update(Ogre::Vector2 currentPoint)
-		{
-			Ogre::Vector3 currentVector(MapToSphere(currentPoint).normalisedCopy());
-			Ogre::Vector3 axis(mStartVector.crossProduct(currentVector).normalisedCopy());
-			Ogre::Radian angle(mStartVector.dotProduct(currentVector));			
-			Ogre::Quaternion delta(axis.x, axis.y, axis.z, angle.valueRadians());
-			delta.normalise();
-			return delta * mStartRotation;
-		}
-
-		
-		Ogre::Vector3 MapToSphere(Ogre::Vector2 point)
-		{
-			Ogre::Vector3 result((point.x - (mWidth / 2.0f)) / mWidth,   ((mHeight / 2.0f) - point.y) / mHeight, 0.0f);
-			if (result.length() > 1.0f)
-			{
-				result.normalise();
-			} else {
-				result.z = Ogre::Math::Sqrt(1.0f - result.length());
-			}
-			return result;
-		}
-	};
-
 	/** WX Callbacks */
 	void OnSize(wxSizeEvent& event);
 	void OnPaint(wxPaintEvent& event);
@@ -163,9 +109,9 @@ private:
 
 	// used for tracking spherical cam
 	Ogre::Real mRadius;
-	Ogre::Vector3 mBasis;
-	Ogre::Vector2 mDragPos;
-
+	Ogre::Vector3 mDirection;
+	Ogre::Vector2 mChangePos;
+	
 	Ogre::Degree mPitch;
 	Ogre::Degree mYaw;
 public:

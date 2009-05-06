@@ -290,21 +290,23 @@ void wxOgre::OnMouseMotion(wxMouseEvent& event)
 {
 	static float speed = 0.0f;
 	static bool dragStart = true;
-	static wxOgre::ArcBall ball(0,0);
 	static const wxString posInfo(wxT("Pos:X:%03d, Y:%03d Change X:%03d Y:%03d"));
 	static Ogre::Quaternion startRot(Ogre::Quaternion::IDENTITY);
 
-	//Ogre::LogManager* logMgr = Ogre::LogManager::getSingletonPtr();
-	//Ogre::Log* log(logMgr->getDefaultLog());
+	Ogre::LogManager* logMgr = Ogre::LogManager::getSingletonPtr();
+	Ogre::Log* log(logMgr->getDefaultLog());
 	int left, top, width, height;	
 	mCamera->getViewport()->getActualDimensions(left, top, width, height);
 
 	wxPoint pos = event.GetPosition();
 	wxPoint change = pos - mPrevPos;
 
+	Ogre::Vector2 changeNorm((Ogre::Real) change.x / (Ogre::Real) width,
+							 (Ogre::Real) -change.y / (Ogre::Real) height);
+	
 	if ((!dragStart) && ((!event.Dragging()) || (!event.LeftIsDown()))) {
-			//wxString msg(wxT("Drag End"));
-			//log->logMessage(Ogre::String(msg.mb_str(wxConvUTF8)));
+ 			wxString msg(wxT("Drag End"));
+			log->logMessage(Ogre::String(msg.mb_str(wxConvUTF8)));
 			dragStart = true;
 	}
 
@@ -314,71 +316,45 @@ void wxOgre::OnMouseMotion(wxMouseEvent& event)
 		{
 			if (mTarget) {
 				Ogre::Vector3 objectCentre(mTarget == NULL ? Ogre::Vector3::ZERO : mTarget->getPosition());
-				mDragPos = Ogre::Vector2(pos.x, pos.y);
 				if (dragStart) {
 					Ogre::Vector3 cam2Object(mCameraNode->getPosition() - objectCentre);
-					mBasis =  cam2Object.normalisedCopy();
+					mDirection =  cam2Object.normalisedCopy();
 					mRadius = cam2Object.length();
- 					dragStart = false;
-					ball.SetScreen(width, height);
-					ball.StartDrag(mDragPos, startRot);
-					//wxString msg(wxT("Drag Start"));
-					//log->logMessage(Ogre::String(msg.mb_str(wxConvUTF8)));
- 					//msg = wxString(wxString::Format(posInfo, pos.x, pos.y, change.x, change.y));
-					//log->logMessage(Ogre::String(msg.mb_str(wxConvUTF8)));
-				} else {
-					mDragPos = Ogre::Vector2( pos.x, pos.y );
-					Ogre::Quaternion rot(ball.Update(mDragPos));
-					startRot = rot;
-					mCameraNode->setPosition(objectCentre + ( rot * mBasis ).normalisedCopy() * mRadius);
+					mChangePos = Ogre::Vector2::ZERO;
+					dragStart = false;					
+					wxString msg(wxT("Drag Start"));
+					log->logMessage(Ogre::String(msg.mb_str(wxConvUTF8)));
+				}  else {
+					Ogre::Vector3 across;
+					Ogre::Vector3 up;
+					Ogre::Vector3 forward;
+					mCamera->getRealOrientation().ToAxes(across, up, forward);
+					mChangePos += changeNorm;
+					Ogre::Quaternion roty(Ogre::Radian(mChangePos.y * Ogre::Math::PI / 12.0f), across);
+					Ogre::Quaternion rotx(Ogre::Radian(mChangePos.x * Ogre::Math::PI / 12.0f), up);					
+					Ogre::Quaternion rot(roty * rotx);
+					rot.normalise();
+					mCameraNode->setPosition(objectCentre + ((rot * mDirection) * mRadius));
  					mCamera->lookAt(objectCentre);
-					//wxString msg(wxString(wxString::Format(posInfo, pos.x, pos.y, change.x, change.y)));
-					//log->logMessage(Ogre::String(msg.mb_str(wxConvUTF8)));
-
 				}
-			} 
-			//Ogre::Vector3 targetUp(mTarget == NULL ? Ogre::Vector3::UNIT_Y : mTarget->getLocalAxes().GetColumn(1));
-			//Ogre::Quaternion q(Ogre::Radian((Ogre::Real) change.x) * (Ogre::Math::PI / 20.0f), targetUp);
-			//Ogre::Vector3 newCam2Object(q * cam2Object.normalisedCopy());
-			//cam2Object.normalise();
-			//newCam2Object *= cam2Object.length();
+			//} 
+			}
+	//	else if(event.MiddleIsDown())
+	//	{
+	//		int left, top, width, height;
+	//		mCamera->getViewport()->getActualDimensions(left, top, width, height);
 
-			//wxSize sz(this->GetSize());
-			//Ogre::Real w = (Ogre::Real) sz.GetX();
-			//Ogre::Real h = (Ogre::Real) sz.GetY();
-			//Ogre::Real prevX = ((mPrevPos.x/w) - 0.5f) * 2.0f;
-			//Ogre::Real prevY = (((h - mPrevPos.y)/h) - 0.5f) * 2.0f;
-			//Ogre::Vector3 p0(prevX, prevY, TrackballProjectToSphere(0.5f, prevX, prevY));
-			//Ogre::Real x  = ((pos.x/w) - 0.5f) * 2.0f;
-			//Ogre::Real y  = (((h - pos.y)/h) - 0.5f) * 2.0f;
-			//Ogre::Vector3 p1(x, y, TrackballProjectToSphere(0.5f, x, y));			
-			//Ogre::Vector3 a(p0.crossProduct(p1));
-			//Ogre::Vector3 d(p0-p1);
-			//Ogre::Real t = d.length() / 2.0f * 0.5f;
-			//t = Ogre::Math::Clamp(t, -1.0f, 1.0f);
-			//Ogre::Radian alpha = 2.0f * Ogre::Math::ASin(t);
-			//Ogre::Quaternion q(alpha * 20.0f, a.normalisedCopy()); 
-			//mCamera->setPosition(q * mCamera->getPosition());
-			//mCamera->lookAt(objectCentre);
+	//		float speed = 1.0f;
+	//		if (event.ShiftDown())
+	//			speed = 0.1f;
+	//		if (event.ControlDown())
+	//			speed = 10.0f;
+	//		float moveX = ((float)-change.x / (float)width) * mZoomScale * speed;
+	//		float moveY = ((float)change.y / (float)height) * mZoomScale * speed;
 
-
-		}
-		else if(event.MiddleIsDown())
-		{
-			int left, top, width, height;
-			mCamera->getViewport()->getActualDimensions(left, top, width, height);
-
-			float speed = 1.0f;
-			if (event.ShiftDown())
-				speed = 0.1f;
-			if (event.ControlDown())
-				speed = 10.0f;
-			float moveX = ((float)-change.x / (float)width) * mZoomScale * speed;
-			float moveY = ((float)change.y / (float)height) * mZoomScale * speed;
-
-			Ogre::Vector3 delta(mCameraNode->getOrientation().xAxis() * moveX);
-			delta += mCameraNode->getOrientation().yAxis() * moveY;
-			mCameraNode->setPosition(mCameraNode->getPosition() + delta);
+	//		Ogre::Vector3 delta(mCamera->getRealOrientation().xAxis() * moveX);
+	//		delta += mCamera->getRealOrientation().yAxis() * moveY;
+	//		mCamera->setPosition(mCamera->getRealPosition() + delta);
 		}
 	}
 	mPrevPos = pos;
