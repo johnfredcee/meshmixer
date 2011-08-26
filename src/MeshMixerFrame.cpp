@@ -83,7 +83,7 @@ wxFrame(parent, id, title, pos, size, wxDEFAULT_FRAME_STYLE)
 {
     mRoot = NULL;
     mMeshNode = NULL;
-    mEntity = NULL;	
+    mEntity = NULL;
     mScene = NULL;
 	mScenePanel = NULL;
     mMesh.setNull();
@@ -199,13 +199,13 @@ bool MeshMixerFrame::createOgrePane()
     mDirectXRenderSystem = NULL;
 #endif
     mOpenGLRenderSystem = NULL;
-    RenderSystemList *rl = mRoot->getAvailableRenderers();
-    if (rl->empty())
+    const RenderSystemList& rl(mRoot->getAvailableRenderers());
+    if (rl.empty())
     {
         wxMessageBox(wxT("No render systems found"), wxT("Error"));
         return false;
     }
-    for(RenderSystemList::iterator it = rl->begin(); it != rl->end(); ++it)
+    for(RenderSystemList::const_iterator it = rl.begin(); it != rl.end(); ++it)
     {
         Ogre::RenderSystem *rs = (*it);
         rs->setConfigOption("Full Screen", "No");
@@ -251,7 +251,7 @@ bool MeshMixerFrame::createOgrePane()
 
     wxString caption;
     String rs = mRoot->getRenderSystem()->getName();
-    if(rs == "OpenGL Rendering Subsystem") 
+    if(rs == "OpenGL Rendering Subsystem")
 		caption = wxT("OGRE - OpenGL");
     else caption = wxT("OGRE - DirectX");
 
@@ -274,9 +274,9 @@ void MeshMixerFrame::createOgreRenderWindow()
 
 	mOgreControl->createOgreRenderResources();
 
-	Ogre::SceneManager *sceneMgr = wxOgre::getSingleton().getSceneManager();    
+	Ogre::SceneManager *sceneMgr = wxOgre::getSingleton().getSceneManager();
 	Ogre::SceneNode *rootNode = sceneMgr->getRootSceneNode();
-	mMeshNode = rootNode->createChildSceneNode();	
+	mMeshNode = rootNode->createChildSceneNode();
     mOgreControl->toggleTimerRendering();
 
 }
@@ -290,8 +290,8 @@ void MeshMixerFrame::createInformationPane()
 {
 
     Ogre::LogManager* logMgr = Ogre::LogManager::getSingletonPtr();
-    
-    mInformationNotebook = new wxAuiNotebook(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, 
+
+    mInformationNotebook = new wxAuiNotebook(this, wxID_ANY, wxDefaultPosition, wxDefaultSize,
 											 wxAUI_NB_TOP | wxAUI_NB_TAB_SPLIT | wxAUI_NB_TAB_MOVE | wxAUI_NB_SCROLL_BUTTONS | wxNO_BORDER);
 
     mLogPanel = new LogPanel(mInformationNotebook);
@@ -304,7 +304,7 @@ void MeshMixerFrame::createInformationPane()
 
     Ogre::Log *importLog = logMgr->createLog("Import.log");
     mImportLogPanel->attachLog(importLog);
-    
+
     wxAuiPaneInfo info;
     info.Caption(wxT("Information"));
     info.MaximizeButton(true);
@@ -317,13 +317,13 @@ void MeshMixerFrame::createInformationPane()
 
 void MeshMixerFrame::createOptionsPane()
 {
-    mOptionsNotebook = new wxAuiNotebook(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_NB_TOP | wxAUI_NB_TAB_SPLIT | wxAUI_NB_TAB_MOVE | wxAUI_NB_SCROLL_BUTTONS | wxNO_BORDER ); 
+    mOptionsNotebook = new wxAuiNotebook(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_NB_TOP | wxAUI_NB_TAB_SPLIT | wxAUI_NB_TAB_MOVE | wxAUI_NB_SCROLL_BUTTONS | wxNO_BORDER );
 
     mOptionsPanel = new OptionsPanel(mOptionsNotebook);
     mOptionsNotebook->AddPage(mOptionsPanel, wxT("Post Process Options"));
 
 
-    wxAuiPaneInfo info;         
+    wxAuiPaneInfo info;
     info.Caption(wxT("Options"));
     info.MaximizeButton(true);
     info.BestSize(512,128);
@@ -345,7 +345,7 @@ void MeshMixerFrame::OnFileNew(wxCommandEvent& event)
 
 void MeshMixerFrame::OnFileOpen(wxCommandEvent& event)
 {
-	
+
     wxFileDialog *fd = new wxFileDialog(this, wxT("Open An Asset"));
     if (fd->ShowModal() == wxID_OK)
     {
@@ -368,11 +368,11 @@ void MeshMixerFrame::OnFileOpen(wxCommandEvent& event)
         } else {
 
 			if (mScenePanel == NULL) {
-				mScenePanel = new ScenePanel(mOptionsNotebook, ID_SCENE_PANEL);		
-				wxString title(wxString::Format("File: %s", fn.GetName()));
+				mScenePanel = new ScenePanel(mOptionsNotebook, ID_SCENE_PANEL);
+				wxString title(wxString::Format(wxT("File: %s"), fn.GetName().c_str()));
 				mOptionsNotebook->AddPage(mScenePanel, title);
-			} 				
-						
+			}
+
             mImportLogPanel->messageLogged(( boost::format("Read file %s ") % fd->GetPath().c_str() ).str() );
             mImportLogPanel->messageLogged(( boost::format("Animations %d ") % mScene->mNumAnimations).str() );
             mImportLogPanel->messageLogged(( boost::format("Materials %d ") % mScene->mNumMaterials).str() );
@@ -383,7 +383,7 @@ void MeshMixerFrame::OnFileOpen(wxCommandEvent& event)
         }
     };
     delete fd;
-    
+
 }
 
 void MeshMixerFrame::OnFileSave(wxCommandEvent& event)
@@ -483,7 +483,7 @@ void MeshMixerFrame::OnSceneChange(wxCommandEvent& event)
 		}
 
 		// attach and view
-		mEntity = wxOgre::getSingleton().getSceneManager()->createEntity(Ogre::String(mMesh->getName()) + Ogre::String("Mesh"), mMesh->getName());	 
+		mEntity = wxOgre::getSingleton().getSceneManager()->createEntity(Ogre::String(mMesh->getName()) + Ogre::String("Mesh"), mMesh->getName());
 		mMeshNode->attachObject(mEntity);
 		mOgreControl->cameraTrackNode(mMeshNode);
 	}

@@ -2,7 +2,7 @@
 #ifndef SCENE_PANEL_H_INCLUDED
 #define SCENE_PANEL_H_INCLUDED
 
-#include <aiscene.h>
+#include <aiScene.h>
 #include <wx/panel.h>
 
 class wxTreeCtrl;

@@ -3,8 +3,8 @@
 #include "OgreLogManager.h"
 
 #ifdef __WXGTK__
-#include <gdk/gdkx.h>
 #include <gdk/gdk.h>
+#include <gdk/gdkx.h>
 #include <gtk/gtk.h> 
 #include <wx/gtk/win_gtk.h>
 #include <GL/glx.h>
@@ -18,7 +18,7 @@ IMPLEMENT_CLASS(wxOgre, wxControl)
 
 // Required for WX
 BEGIN_EVENT_TABLE(wxOgre, wxControl)
-	EVT_SIZE(wxOgre::OnSize)
+EVT_SIZE(wxOgre::OnSize)
 	// EVT_PAINT(wxOgre::OnPaint) // Produces flickers and runs too fast!
 	EVT_ERASE_BACKGROUND(wxOgre::OnEraseBackground)
 	EVT_TIMER(ID_RENDERTIMER, wxOgre::OnRenderTimer)
@@ -69,7 +69,7 @@ void wxOgre::createOgreRenderWindow()
     gtk_widget_realize(privHandle);
    
 	// grab the window object
-	GdkWindow* gdkWin = GDK_PIZZA(privHandle)->bin_window;
+	GdkWindow* gdkWin = GTK_PIZZA(privHandle)->bin_window;
 	Display* display = GDK_WINDOW_XDISPLAY(gdkWin);
 	Window wid = GDK_WINDOW_XWINDOW(gdkWin);
 
