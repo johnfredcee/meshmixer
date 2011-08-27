@@ -349,10 +349,9 @@ void MeshMixerFrame::OnFileOpen(wxCommandEvent& event)
     wxFileDialog *fd = new wxFileDialog(this, wxT("Open An Asset"));
     if (fd->ShowModal() == wxID_OK)
     {
-
-		std::string meshPath(fd->GetPath().fn_str());
+		std::string meshPath(fd->GetPath().mb_str(wxConvUTF8));
         wxFileName fn(fd->GetPath());
-        std::string meshName(fn.GetName().fn_str());
+        std::string meshName(fn.GetName().mb_str(wxConvUTF8));
 		mWorkingDir = wxString(fn.GetPath());
 
 		if (mScene != NULL) {
@@ -411,7 +410,7 @@ void MeshMixerFrame::OnFileSave(wxCommandEvent& event)
 					Ogre::MaterialManager *mmptr = Ogre::MaterialManager::getSingletonPtr();
 					Ogre::MaterialPtr materialPtr = mmptr->getByName(matName);
 					Ogre::MaterialSerializer ms;
-					Ogre::String matPath(Ogre::String(fdir.GetName().fn_str()));
+					Ogre::String matPath(Ogre::String(fdir.GetName().mb_str(wxConvUTF8)));
 					matPath = matPath + Ogre::String("\\");
 					matPath = matPath + matName;
 					matPath = matPath + Ogre::String(".material");
@@ -420,7 +419,7 @@ void MeshMixerFrame::OnFileSave(wxCommandEvent& event)
 				}
             }
             Ogre::MeshSerializer *meshSerializer = new Ogre::MeshSerializer();
-            meshSerializer->exportMesh(mMesh.getPointer(), Ogre::String(fn.GetFullPath().fn_str()),  Ogre::Serializer::ENDIAN_NATIVE);
+            meshSerializer->exportMesh(mMesh.getPointer(), Ogre::String(fn.GetFullPath().mb_str(wxConvUTF8)),  Ogre::Serializer::ENDIAN_NATIVE);
         }
 
     }
@@ -466,7 +465,7 @@ void MeshMixerFrame::OnSceneChange(wxCommandEvent& event)
 	{
 		// yay!
 		MeshMaker maker;
-		maker.setDirectory(std::string(mWorkingDir.fn_str()));
+		maker.setDirectory(std::string(mWorkingDir.mb_str(wxConvUTF8)));
 		maker.setName(std::string(info->meshNode->mName.data));
 
 		// log import
